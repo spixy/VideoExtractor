@@ -14,7 +14,7 @@ namespace VideoExtractor
         public int AudioBitRate;
         public int VideoBitRate;
         public double FPS;
-        public int Duration = -1;
+        public int Duration;
     }
 
     static class Utility
@@ -103,7 +103,7 @@ namespace VideoExtractor
                     else if (ea.Data.Contains("Video: "))
                     {
                         string[] words = ea.Data.Split(' ');
-                        int n;
+                        int w, h;
 
                         for (int i = 0; i < words.Length; i++)
                         {
@@ -121,12 +121,11 @@ namespace VideoExtractor
                             }
 
                             // Resolution
-                            string[] tmp = words[i].Split('x');
+                            string[] ress = words[i].Replace(",", "").Split('x');
 
-                            if (tmp.Length == 2 && Int32.TryParse(tmp[0], out n) && Int32.TryParse(tmp[1], out n))
+                            if (ress.Length == 2 && Int32.TryParse(ress[0], out w) && Int32.TryParse(ress[1], out h))
                             {
-                                string[] ress = words[i].Split('x');
-                                Video.Size = new Size(Convert.ToInt32(ress[0]), Convert.ToInt32(ress[1].Replace(",", "")));
+                                Video.Size = new Size(w, h);
                             }
                         }
 

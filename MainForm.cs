@@ -31,18 +31,19 @@ namespace VideoExtractor
         const string ConfigFile = "settings.ini";
         const string LogFile = "log.txt";
         const string UpdateFile = "https://raw.githubusercontent.com/spixy/VideoExtractor/master/lastversion";
-        readonly int Bits = IntPtr.Size * 8;
 
         bool OpenExplorer = true;
         bool CheckUpdates = true;
         bool OutputEnabled = false;
         string ffmpeg = "ffmpeg.exe";
 
-        VideoInfo videoInfo;
-        Logger logger;
+        Logger logger = new Logger(LogFile, false);
         TabPage outputTab;
-        List<Process> processes;
+
+        List<Process> processes = new List<Process>();
         Process extractAudio, removeAudio, extractImages, resizeVideo, cropVideo, makeVideo;
+
+        // GENERAL
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -57,15 +58,14 @@ namespace VideoExtractor
             outputTab = tabPage3;
             tabControl1.TabPages.Remove(outputTab);
 
-            button3.Enabled = button4.Enabled = button9.Enabled = button16.Enabled = button20.Enabled = button25.Enabled = false; // start
-            button10.Enabled = button11.Enabled = button12.Enabled = button17.Enabled = button21.Enabled = button24.Enabled = false; // stop
+            MinimumSize = Size;
+            MaximumSize = Size;
 
             label15.Text = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            label19.Text = (Bits == 64) ? "x86-64" : "x86";
 
-            processes = new List<Process>();
+            int Bits = IntPtr.Size * 8;
+            label19.Text = Bits + "-bit";
 
-            logger = new Logger(LogFile, false);
             logger.Clear();
 
             LoadSettings();
@@ -73,12 +73,12 @@ namespace VideoExtractor
             if (CheckUpdates)
             {
                 Updater updater = new Updater(UpdateFile);
-                updater.UpdateAvailableAction = () => MessageBox.Show("New version available.", "Updater", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                updater.UpdateAvailableAction = () =>
+                {
+                    linkLabel3.Visible = true;
+                };
                 updater.IsUpdateAvailableAsync();
             }
-
-            MinimumSize = Size;
-            MaximumSize = Size;
         }
 
         private void LoadSettings()
@@ -94,6 +94,12 @@ namespace VideoExtractor
                     if (line.ToLower().Contains("file log")) checkBox3.Checked = true;
                     if (line.ToLower().Contains("output")) checkBox5.Checked = true;
                     if (line.ToLower().Contains("ffmpeg ")) textBox9.Text = line.ToLower().Replace("ffmpeg ", "");
+                    if (line.ToLower().Contains("last tab "))
+                    {
+                        int index;
+                        if (Int32.TryParse(line.ToLower().Replace("last tab ", ""), out index) && index >= 0 && index <= 5)
+                            tabControl1.SelectedIndex = index;
+                    }
                 }
             }
             catch {}
@@ -108,6 +114,11 @@ namespace VideoExtractor
                 if (checkBox3.Checked) file.WriteLine("file log");
                 if (checkBox5.Checked) file.WriteLine("output");
                 file.WriteLine("ffmpeg " + textBox9.Text);
+
+                if (checkBox6.Checked)
+                {
+                    file.WriteLine("last tab " + tabControl1.SelectedIndex);
+                }
             }
 
             foreach (Process p in processes)
@@ -223,11 +234,9 @@ namespace VideoExtractor
 
             int val;
 
-            bool valid = (comboBox.Text == "Default") || (Int32.TryParse(comboBox.Text, out val) && val > 0);
+            bool valid = comboBox.SelectedIndex == 0 || (Int32.TryParse(comboBox.Text, out val) && val > 0);
 
             comboBox.BackColor = (valid) ? SystemColors.Window : Color.Red;
-
-            e.Cancel = !valid;
         }
 
         private void comboBox_double_Validating(object sender, CancelEventArgs e)
@@ -239,8 +248,6 @@ namespace VideoExtractor
             bool valid = (Double.TryParse(comboBox.Text, out val) && val > 0);
 
             comboBox.BackColor = (valid) ? SystemColors.Window : Color.Red;
-
-            e.Cancel = !valid;
         }
 
         private void textBox_Validating(object sender, CancelEventArgs e)
@@ -257,8 +264,6 @@ namespace VideoExtractor
                 Int32.TryParse(Text.Substring(9, 3), out val);
 
             textBox.BackColor = (valid) ? SystemColors.Window : Color.Red;
-
-            e.Cancel = !valid;
         }
 
         // EXTRACT AUDIO
@@ -266,16 +271,16 @@ namespace VideoExtractor
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
             button3.Enabled = File.Exists(textBox1.Text);
-            videoInfo = Utility.LoadVideoInfo(ffmpeg, textBox1.Text);
+            VideoInfo videoInfo = Utility.LoadVideoInfo(ffmpeg, textBox1.Text);
 
             if (videoInfo.Channels > 0)
-                comboBox5.Text = videoInfo.Channels.ToString();
+                comboBox5.Items[0] = "Default (" + videoInfo.Channels + ")";
 
             if (videoInfo.SampleRate > 0)
-                comboBox1.Text = videoInfo.SampleRate.ToString();
+                comboBox1.Items[0] = "Default (" + videoInfo.SampleRate + ")";
 
             if (videoInfo.AudioBitRate > 0)
-                comboBox2.Text = videoInfo.AudioBitRate.ToString();
+                comboBox2.Items[0] = "Default (" + videoInfo.AudioBitRate + ")";
 
             if (videoInfo.Duration > 0)
             {
@@ -294,15 +299,13 @@ namespace VideoExtractor
         {
             if (comboBox8.Text.ToUpper() == "MP3" && comboBox2.Text != "Default")
             {
-                try
-                {
-                    if (Convert.ToInt32(comboBox2.Text) > 320) comboBox2.Text = "320";
-                }
-                catch { }
+                int val;
+                if (Int32.TryParse(comboBox2.Text, out val) && val > 320)
+                    comboBox2.Text = "320";
             }
         }
 
-        private void comboBox8_SelectedIndexChanged(object sender, EventArgs e)
+        private void comboBox8_TextChanged(object sender, EventArgs e)
         {
             try
             {
@@ -313,11 +316,9 @@ namespace VideoExtractor
 
             if (comboBox8.Text.ToUpper() == "MP3" && comboBox2.Text != "Default")
             {
-                try
-                {
-                    if (Convert.ToInt32(comboBox2.Text) > 320) comboBox2.Text = "320";
-                }
-                catch { }
+                int val;
+                if (Int32.TryParse(comboBox2.Text, out val) && val > 320)
+                    comboBox2.Text = "320";
             }
         }
 
@@ -423,7 +424,7 @@ namespace VideoExtractor
         private void textBox4_TextChanged(object sender, EventArgs e)
         {
             button4.Enabled = File.Exists(textBox3.Text);
-            videoInfo = Utility.LoadVideoInfo(ffmpeg, textBox3.Text);
+            VideoInfo videoInfo = Utility.LoadVideoInfo(ffmpeg, textBox3.Text);
 
             if (videoInfo.Duration > 0)
             {
@@ -628,11 +629,6 @@ namespace VideoExtractor
             textBox15.Text = textBox15.Text.Replace(@"\\", @"\");
         }
 
-        private void comboBox6_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            LoadImages();
-        }
-
         private void comboBox6_TextChanged(object sender, EventArgs e)
         {
             string text = comboBox6.Text;
@@ -652,7 +648,7 @@ namespace VideoExtractor
             LoadImages();
         }
 
-        private void comboBox4_SelectedIndexChanged(object sender, EventArgs e)
+        private void comboBox4_TextChanged(object sender, EventArgs e)
         {
             try
             {
@@ -740,7 +736,7 @@ namespace VideoExtractor
         {
             button16.Enabled = File.Exists(textBox10.Text);
 
-            videoInfo = Utility.LoadVideoInfo(ffmpeg, textBox10.Text);
+            VideoInfo videoInfo = Utility.LoadVideoInfo(ffmpeg, textBox10.Text);
 
             FileInfo fi = new FileInfo(textBox10.Text);
 
@@ -757,13 +753,23 @@ namespace VideoExtractor
 
             if (videoInfo.VideoBitRate > 0)
             {
-                comboBox11.Items.Add(videoInfo.VideoBitRate);
+                comboBox11.Items[0] = "Default (" + videoInfo.VideoBitRate + ")";
             }
 
             if (videoInfo.AudioBitRate > 0)
             {
-                comboBox12.Items.Add(videoInfo.AudioBitRate);
+                comboBox12.Items[0] = "Default (" + videoInfo.AudioBitRate + ")";
             }
+        }
+
+        private void comboBox7_TextChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                FileInfo fi = new FileInfo(textBox11.Text);
+                textBox11.Text = fi.FullName.Replace(fi.Extension, "") + "." + comboBox7.Text.ToLower();
+            }
+            catch { }
         }
 
         private void button14_Click(object sender, EventArgs e)
@@ -785,16 +791,6 @@ namespace VideoExtractor
             {
                 textBox11.Text = saveFileDialog1.FileName;
             }
-        }
-
-        private void comboBox7_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            try
-            {
-                FileInfo fi = new FileInfo(textBox11.Text);
-                textBox11.Text = fi.FullName.Replace(fi.Extension, "") + "." + comboBox7.Text.ToLower();
-            }
-            catch { }
         }
 
         private void button17_Click(object sender, EventArgs e)
@@ -869,7 +865,6 @@ namespace VideoExtractor
         {
             numericUpDown1.Enabled = numericUpDown3.Enabled = !checkBox4.Checked;
         }
-
 
         private void button20_Click(object sender, EventArgs e)
         {
@@ -957,6 +952,8 @@ namespace VideoExtractor
                 MaximumSize = new Size(0, 0);
             else
                 MaximumSize = MinimumSize;
+
+            linkLabel3.Parent = tabControl1.SelectedTab;
         }
 
         private void tabControl1_DrawItem(object sender, DrawItemEventArgs e)
