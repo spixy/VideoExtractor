@@ -21,10 +21,7 @@ namespace VideoExtractor
 
         public void Clear()
         {
-            if (Enabled)
-            {
-                File.WriteAllBytes(LogFile, new Byte[0]);
-            }
+            File.WriteAllBytes(LogFile, new Byte[0]);
         }
 
         public void Log(string err)

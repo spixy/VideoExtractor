@@ -5,9 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Media;
-using System.Net;
 using System.Reflection;
-using System.Threading;
 using System.Windows.Forms;
 
 namespace VideoExtractor
@@ -31,7 +29,7 @@ namespace VideoExtractor
 
         const string HomePage = "https://github.com/spixy/VideoExtractor";
         const string ConfigFile = "settings.ini";
-        const string LogFile = "output.txt";
+        const string LogFile = "log.txt";
         const string UpdateFile = "https://raw.githubusercontent.com/spixy/VideoExtractor/master/lastversion";
         readonly int Bits = IntPtr.Size * 8;
 
@@ -51,7 +49,6 @@ namespace VideoExtractor
             comboBox1.SelectedIndex = 0;
             comboBox2.SelectedIndex = 0;
             comboBox3.SelectedIndex = 10;
-            comboBox4.SelectedIndex = 0;
             comboBox5.SelectedIndex = 0;
             comboBox6.SelectedIndex = 1;
             comboBox9.SelectedIndex = 1;
@@ -201,6 +198,11 @@ namespace VideoExtractor
                 if (OpenExplorer)
                     Process.Start("explorer.exe", @"/select, " + file);
             }
+            else if (Directory.Exists(file))
+            {
+                if (OpenExplorer)
+                    Process.Start("explorer.exe", file);
+            }
             else
             {
                 SystemSounds.Hand.Play();
@@ -213,6 +215,52 @@ namespace VideoExtractor
             }
         }
 
+        // VALIDATION
+
+        private void comboBox_Validating(object sender, CancelEventArgs e)
+        {
+            ComboBox comboBox = sender as ComboBox;
+
+            int val;
+
+            bool valid = (comboBox.Text == "Default") || (Int32.TryParse(comboBox.Text, out val) && val > 0);
+
+            comboBox.BackColor = (valid) ? SystemColors.Window : Color.Red;
+
+            e.Cancel = !valid;
+        }
+
+        private void comboBox_double_Validating(object sender, CancelEventArgs e)
+        {
+            ComboBox comboBox = sender as ComboBox;
+
+            double val;
+
+            bool valid = (Double.TryParse(comboBox.Text, out val) && val > 0);
+
+            comboBox.BackColor = (valid) ? SystemColors.Window : Color.Red;
+
+            e.Cancel = !valid;
+        }
+
+        private void textBox_Validating(object sender, CancelEventArgs e)
+        {
+            TextBox textBox = sender as TextBox;
+            string Text = textBox.Text;
+            int val;
+
+            bool valid = Text.Length == 12 &&
+                Text[2] == ':' && Text[5] == ':' && Text[8] == '.' &&
+                Int32.TryParse(Text.Substring(0, 2), out val) &&
+                Int32.TryParse(Text.Substring(3, 2), out val) &&
+                Int32.TryParse(Text.Substring(6, 2), out val) &&
+                Int32.TryParse(Text.Substring(9, 3), out val);
+
+            textBox.BackColor = (valid) ? SystemColors.Window : Color.Red;
+
+            e.Cancel = !valid;
+        }
+
         // EXTRACT AUDIO
 
         private void textBox1_TextChanged(object sender, EventArgs e)
@@ -220,14 +268,14 @@ namespace VideoExtractor
             button3.Enabled = File.Exists(textBox1.Text);
             videoInfo = Utility.LoadVideoInfo(ffmpeg, textBox1.Text);
 
-            if (videoInfo.Channels != null)
-                comboBox5.Text = videoInfo.Channels;
+            if (videoInfo.Channels > 0)
+                comboBox5.Text = videoInfo.Channels.ToString();
 
-            if (videoInfo.SampleRate != null)
-                comboBox1.Text = videoInfo.SampleRate;
+            if (videoInfo.SampleRate > 0)
+                comboBox1.Text = videoInfo.SampleRate.ToString();
 
-            if (videoInfo.AudioBitRate != null)
-                comboBox2.Text = videoInfo.AudioBitRate;
+            if (videoInfo.AudioBitRate > 0)
+                comboBox2.Text = videoInfo.AudioBitRate.ToString();
 
             if (videoInfo.Duration > 0)
             {
@@ -345,15 +393,8 @@ namespace VideoExtractor
             button3.Enabled = false;
             button10.Enabled = true;
 
-            FileInfo fi = new FileInfo(textBox2.Text);
-
-            string samplerate = (comboBox1.SelectedIndex != 0) ? " -ar " + comboBox1.Text : "";
-            string bitrate = (comboBox2.SelectedIndex != 0) ? " -ab " + comboBox2.Text : "";
-            string channel = (comboBox5.SelectedIndex != 0) ? " -ac " + comboBox5.Text : "";
-            string startDate = (!textBox16.Text.Contains("00:00:00.000")) ? " -ss " + textBox16.Text : "";
-            string duration = (!textBox17.Text.Contains("00:00:00.000")) ? " -t " + textBox17.Text : "";
-
-            string argument = "-i \"" + textBox1.Text + "\" -y -vn" + channel + samplerate + bitrate + startDate + duration + " -f " + fi.Extension.Remove(0, 1) + " \"" + textBox2.Text + "\"";
+            string argument = Utility.ExtractVideo_Arguments(textBox1.Text, textBox2.Text,
+                comboBox1.Text, comboBox2.Text, comboBox5.Text, textBox16.Text, textBox17.Text);
 
             logger.Log("ffmpeg.exe " + argument);
 
@@ -390,9 +431,15 @@ namespace VideoExtractor
                 trackBar2.Maximum = videoInfo.Duration;
             }
 
+            if (videoInfo.FPS > 0)
+            {
+                comboBox3.Text = videoInfo.FPS.ToString();
+            }
+
             if (videoInfo.Size != null && videoInfo.Size.Width * videoInfo.Size.Height > 0)
             {
-                comboBox4.Text = videoInfo.Size.Width + "x" + videoInfo.Size.Height;
+                numericUpDown2.Value = videoInfo.Size.Width;
+                numericUpDown8.Value = videoInfo.Size.Height;
             }
         }
 
@@ -423,12 +470,10 @@ namespace VideoExtractor
             button4.Enabled = false;
             button12.Enabled = true;
 
-            string startDate = (!textBox5.Text.Contains("00:00:00.000")) ? " -ss " + textBox5.Text + " " : "";
-            string duration = (!textBox8.Text.Contains("00:00:00.000")) ? " -t " + textBox8.Text : "";
-            string size = (comboBox4.SelectedIndex != 0) ? " -s " + comboBox4.Text : "";
-            string path = (textBox4.Text + "\\image_%d." + comboBox9.Text + "\"").Replace(@"\\", @"\");
+            string output = (textBox4.Text + "\\image_%d." + comboBox9.Text.ToLower()).Replace(@"\\", @"\");
 
-            string argument = startDate + "-i \"" + textBox3.Text + "\" -r " + comboBox3.Text + duration + size + " -f image2 \"" + path;
+            string argument = Utility.ExtractImages_Arguments(textBox3.Text, output,
+                (int)numericUpDown2.Value, (int)numericUpDown8.Value, comboBox3.Text.Replace(',','.'), textBox5.Text, textBox8.Text);
 
             if (!Directory.Exists(textBox4.Text))
             {
@@ -504,6 +549,16 @@ namespace VideoExtractor
             catch { }
         }
 
+        private void numericUpDown2_ValueChanged(object sender, EventArgs e)
+        {
+            label55.Text = (numericUpDown2.Value == 0) ? "px (default)" : "px";
+        }
+
+        private void numericUpDown8_ValueChanged(object sender, EventArgs e)
+        {
+            label56.Text = (numericUpDown8.Value == 0) ? "px (default)" : "px";
+        }
+
         // REMOVE AUDIO
 
         private void textBox6_TextChanged(object sender, EventArgs e)
@@ -537,7 +592,7 @@ namespace VideoExtractor
             button9.Enabled = false;
             button11.Enabled = true;
 
-            string argument = "-i \"" + textBox6.Text + "\" -y" + " -an \"" + textBox7.Text + "\"";
+            string argument = Utility.RemoveAudio_Arguments(textBox6.Text, textBox7.Text);
 
             logger.Log("ffmpeg.exe " + argument);
 
@@ -561,7 +616,7 @@ namespace VideoExtractor
             LaunchExplorer(textBox7.Text);
         }
 
-        // MAKE VIDEO
+        // CREATE VIDEO
 
         private void textBox14_TextChanged(object sender, EventArgs e)
         {
@@ -597,6 +652,16 @@ namespace VideoExtractor
             LoadImages();
         }
 
+        private void comboBox4_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                FileInfo fi = new FileInfo(textBox15.Text);
+                textBox15.Text = fi.FullName.Replace(fi.Extension, "") + "." + comboBox4.Text.ToLower();
+            }
+            catch { }
+        }
+
         private void button22_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
@@ -606,6 +671,7 @@ namespace VideoExtractor
             {
                 textBox14.Text = folderBrowserDialog1.SelectedPath;
                 textBox15.Text = folderBrowserDialog1.SelectedPath + "\\MyVideo.avi";
+                comboBox4.Text = "AVI";
             }
         }
 
@@ -625,7 +691,8 @@ namespace VideoExtractor
             button24.Enabled = true;
 
             string input = textBox14.Text + "\\" + comboBox6.Text;
-            string argument = "-f image2 -i \"" + input + "\" -y" + " -r " + comboBox10.Text + " \"" + textBox15.Text + "\"";
+
+            string argument = Utility.CreateVideo_Arguments(input, textBox15.Text, comboBox10.Text);
 
             logger.Log("ffmpeg.exe " + argument);
 
@@ -688,12 +755,12 @@ namespace VideoExtractor
                 numericUpDown7.Value = videoInfo.Size.Height;
             }
 
-            if (videoInfo.VideoBitRate != null)
+            if (videoInfo.VideoBitRate > 0)
             {
                 comboBox11.Items.Add(videoInfo.VideoBitRate);
             }
 
-            if (videoInfo.AudioBitRate != null)
+            if (videoInfo.AudioBitRate > 0)
             {
                 comboBox12.Items.Add(videoInfo.AudioBitRate);
             }
@@ -735,14 +802,8 @@ namespace VideoExtractor
             button16.Enabled = false;
             button17.Enabled = true;
 
-            string size = " -vf scale=";
-            size += (numericUpDown6.Value == 0) ? "w=iw" : "w=" + numericUpDown6.Value;
-            size += (numericUpDown7.Value == 0) ? ":h=ih" : ":h=" + numericUpDown7.Value;
-
-            string video_bitrate = (comboBox11.SelectedIndex != 0) ? " -b:v " + comboBox11.Text + "k" : "";
-            string audio_bitrate = (comboBox12.SelectedIndex != 0) ? " -b:a " + comboBox12.Text + "k" : "";
-
-            string argument = "-i \"" + textBox10.Text + "\" -y" + video_bitrate + audio_bitrate + size + " \"" + textBox11.Text + "\"";
+            string argument = Utility.ResizeVideo_Arguments(textBox10.Text, textBox11.Text,
+                (int)numericUpDown6.Value, (int)numericUpDown7.Value, comboBox11.Text, comboBox12.Text);
 
             logger.Log("ffmpeg.exe " + argument);
 
@@ -815,8 +876,8 @@ namespace VideoExtractor
             button20.Enabled = false;
             button21.Enabled = true;
 
-            string area = (!checkBox4.Checked) ? ":" + numericUpDown1.Value + ":" + numericUpDown3.Value : "";
-            string argument = "-i \"" + textBox12.Text + "\" -y" + " -vf crop=" + numericUpDown5.Value + ":" + numericUpDown4.Value + area + " \"" + textBox13.Text + "\"";
+            string argument = Utility.CropVideo_Arguments(textBox12.Text, textBox13.Text,
+                (int)numericUpDown1.Value, (int)numericUpDown3.Value, checkBox4.Checked, (int)numericUpDown5.Value, (int)numericUpDown4.Value);
 
             logger.Log("ffmpeg.exe " + argument);
 
