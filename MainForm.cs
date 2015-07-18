@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Media;
 using System.Reflection;
@@ -12,12 +13,7 @@ namespace VideoExtractor
 {
     public partial class MainForm : Form
     {
-        public MainForm()
-        {
-            InitializeComponent();
-        }
-
-        enum Task
+        private enum Task
         {
             ExtractAudio,
             RemoveAudio,
@@ -27,23 +23,22 @@ namespace VideoExtractor
             MakeVideo
         }
 
-        const string HomePage = "https://github.com/spixy/VideoExtractor";
-        const string ConfigFile = "settings.ini";
-        const string LogFile = "log.txt";
-        const string UpdateFile = "https://raw.githubusercontent.com/spixy/VideoExtractor/master/lastversion";
+        private bool OpenExplorer = true;
+        private bool CheckUpdates = true;
+        private bool OutputEnabled = false;
+        private string ffmpeg = "ffmpeg.exe";
 
-        bool OpenExplorer = true;
-        bool CheckUpdates = true;
-        bool OutputEnabled = false;
-        string ffmpeg = "ffmpeg.exe";
-
-        Logger logger = new Logger(LogFile, false);
-        TabPage outputTab;
-
-        List<Process> processes = new List<Process>();
-        Process extractAudio, removeAudio, extractImages, resizeVideo, cropVideo, makeVideo;
+        private readonly Logger logger = new Logger(Properties.Resources.LogFile, false);
+        private readonly List<Process> processes = new List<Process>();
+        private TabPage outputTab;
+        private Process extractAudio, removeAudio, extractImages, resizeVideo, cropVideo, makeVideo;
 
         // GENERAL
+
+        public MainForm()
+        {
+            InitializeComponent();
+        }
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -72,10 +67,9 @@ namespace VideoExtractor
 
             if (CheckUpdates)
             {
-                Updater updater = new Updater(UpdateFile);
-                updater.UpdateAvailableAction = () =>
+                Updater updater = new Updater(Properties.Resources.UpdateFile)
                 {
-                    linkLabel3.Visible = true;
+                    UpdateAvailableAction = () => { linkLabel3.Visible = true; }
                 };
                 updater.IsUpdateAvailableAsync();
             }
@@ -85,7 +79,7 @@ namespace VideoExtractor
         {
             try
             {
-                string[] lines = File.ReadAllLines(ConfigFile);
+                string[] lines = File.ReadAllLines(Properties.Resources.ConfigFile);
 
                 foreach (string line in lines)
                 {
@@ -97,17 +91,20 @@ namespace VideoExtractor
                     if (line.ToLower().Contains("last tab "))
                     {
                         int index;
-                        if (Int32.TryParse(line.ToLower().Replace("last tab ", ""), out index) && index >= 0 && index <= 5)
+                        if (int.TryParse(line.ToLower().Replace("last tab ", ""), out index) && index >= 0 && index <= 5)
                             tabControl1.SelectedIndex = index;
                     }
                 }
             }
-            catch {}
+            catch
+            {
+                // ignored
+            }
         }
 
-        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        private void SaveSettings()
         {
-            using (StreamWriter file = new StreamWriter(ConfigFile, false))
+            using (StreamWriter file = new StreamWriter(Properties.Resources.ConfigFile, false))
             {
                 if (!checkBox1.Checked) file.WriteLine("no windows");
                 if (!checkBox2.Checked) file.WriteLine("no update");
@@ -120,6 +117,11 @@ namespace VideoExtractor
                     file.WriteLine("last tab " + tabControl1.SelectedIndex);
                 }
             }
+        }
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            SaveSettings();
 
             foreach (Process p in processes)
             {
@@ -127,25 +129,28 @@ namespace VideoExtractor
                 {
                     p.Kill();
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
             }
         }
 
         private void WriteToOutput(string text)
         {
-            if (OutputEnabled)
+            if (!OutputEnabled)
+                return;
+
+            if (outputLog.InvokeRequired)
             {
-                if (outputLog.InvokeRequired)
-                {
-                    outputLog.Invoke((MethodInvoker)delegate
-                    {
-                        outputLog.Text += text + "\r\n";
-                    });
-                }
-                else
+                outputLog.Invoke((MethodInvoker)delegate
                 {
                     outputLog.Text += text + "\r\n";
-                }
+                });
+            }
+            else
+            {
+                outputLog.Text += text + "\r\n";
             }
         }
 
@@ -204,16 +209,19 @@ namespace VideoExtractor
 
         private void LaunchExplorer(string file)
         {
+            // File
             if (File.Exists(file))
             {
                 if (OpenExplorer)
                     Process.Start("explorer.exe", @"/select, " + file);
             }
+            // Directory
             else if (Directory.Exists(file))
             {
                 if (OpenExplorer)
                     Process.Start("explorer.exe", file);
             }
+            // Not found
             else
             {
                 SystemSounds.Hand.Play();
@@ -231,10 +239,9 @@ namespace VideoExtractor
         private void comboBox_Validating(object sender, CancelEventArgs e)
         {
             ComboBox comboBox = sender as ComboBox;
-
             int val;
 
-            bool valid = comboBox.SelectedIndex == 0 || (Int32.TryParse(comboBox.Text, out val) && val > 0);
+            bool valid = comboBox.SelectedIndex == 0 || (int.TryParse(comboBox.Text, out val) && val > 0);
 
             comboBox.BackColor = (valid) ? SystemColors.Window : Color.Red;
         }
@@ -242,10 +249,9 @@ namespace VideoExtractor
         private void comboBox_double_Validating(object sender, CancelEventArgs e)
         {
             ComboBox comboBox = sender as ComboBox;
-
             double val;
 
-            bool valid = (Double.TryParse(comboBox.Text, out val) && val > 0);
+            bool valid = (double.TryParse(comboBox.Text, out val) && val > 0);
 
             comboBox.BackColor = (valid) ? SystemColors.Window : Color.Red;
         }
@@ -253,15 +259,15 @@ namespace VideoExtractor
         private void textBox_Validating(object sender, CancelEventArgs e)
         {
             TextBox textBox = sender as TextBox;
-            string Text = textBox.Text;
+            string text = textBox.Text;
             int val;
 
-            bool valid = Text.Length == 12 &&
-                Text[2] == ':' && Text[5] == ':' && Text[8] == '.' &&
-                Int32.TryParse(Text.Substring(0, 2), out val) &&
-                Int32.TryParse(Text.Substring(3, 2), out val) &&
-                Int32.TryParse(Text.Substring(6, 2), out val) &&
-                Int32.TryParse(Text.Substring(9, 3), out val);
+            bool valid = text.Length == 12 &&
+                text[2] == ':' && text[5] == ':' && text[8] == '.' &&
+                int.TryParse(text.Substring(0, 2), out val) &&
+                int.TryParse(text.Substring(3, 2), out val) &&
+                int.TryParse(text.Substring(6, 2), out val) &&
+                int.TryParse(text.Substring(9, 3), out val);
 
             textBox.BackColor = (valid) ? SystemColors.Window : Color.Red;
         }
@@ -312,12 +318,15 @@ namespace VideoExtractor
                 FileInfo fi = new FileInfo(textBox1.Text);
                 textBox2.Text = fi.FullName.Replace(fi.Extension, "") + "." + comboBox8.Text.ToLower();
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
 
             if (comboBox8.Text.ToUpper() == "MP3" && comboBox2.Text != "Default")
             {
                 int val;
-                if (Int32.TryParse(comboBox2.Text, out val) && val > 320)
+                if (int.TryParse(comboBox2.Text, out val) && val > 320)
                     comboBox2.Text = "320";
             }
         }
@@ -326,44 +335,38 @@ namespace VideoExtractor
         {
             try
             {
-                TimeSpan ts = new TimeSpan(
-                    Convert.ToInt32(textBox16.Text.Remove(2, 10)),
-                    Convert.ToInt32(textBox16.Text.Remove(5, 7).Remove(0, 3)),
-                    Convert.ToInt32(textBox16.Text.Remove(8, 4).Remove(0, 6))
-                );
-                trackBar3.Value = (int)ts.TotalSeconds;
+                trackBar3.Value = (int) Utility.GetTotalSeconds(textBox16.Text);
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
 
         private void textBox17_TextChanged(object sender, EventArgs e)
         {
             try
             {
-                TimeSpan ts = new TimeSpan(
-                    Convert.ToInt32(textBox17.Text.Remove(2, 10)),
-                    Convert.ToInt32(textBox17.Text.Remove(5, 7).Remove(0, 3)),
-                    Convert.ToInt32(textBox17.Text.Remove(8, 4).Remove(0, 6))
-                );
-                trackBar4.Value = (int)ts.TotalSeconds;
+                trackBar4.Value = (int)Utility.GetTotalSeconds(textBox17.Text);
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
 
         private void trackBar3_ValueChanged(object sender, EventArgs e)
         {
             string ms = (textBox16.Text.Length == 12) ? textBox16.Text.Remove(0, 9) : "000";
 
-            TimeSpan ts = new TimeSpan(0, 0, trackBar3.Value);
-            textBox16.Text = String.Format("{0:00}:{1:00}:{2:00}.{3:000}", ts.Hours, ts.Minutes, ts.Seconds, ms);
+            textBox16.Text = Utility.GetTimeSpanText(trackBar3.Value) + "." + ms;
         }
 
         private void trackBar4_ValueChanged(object sender, EventArgs e)
         {
             string ms = (textBox17.Text.Length == 12) ? textBox17.Text.Remove(0, 9) : "000";
 
-            TimeSpan ts = new TimeSpan(0, 0, trackBar4.Value);
-            textBox17.Text = String.Format("{0:00}:{1:00}:{2:00}.{3:000}", ts.Hours, ts.Minutes, ts.Seconds, ms);
+            textBox17.Text = Utility.GetTimeSpanText(trackBar4.Value) + "." + ms;
 
             label50.Visible = (trackBar4.Value == 0);
         }
@@ -394,14 +397,14 @@ namespace VideoExtractor
             button3.Enabled = false;
             button10.Enabled = true;
 
-            string argument = Utility.ExtractVideo_Arguments(textBox1.Text, textBox2.Text,
+            string argument = Utility.ExtractAudio_Arguments(textBox1.Text, textBox2.Text,
                 comboBox1.Text, comboBox2.Text, comboBox5.Text, textBox16.Text, textBox17.Text);
 
             logger.Log("ffmpeg.exe " + argument);
 
             BackgroundWorker bw = new BackgroundWorker();
             bw.DoWork += (obj, ea) => bw_DoWork(argument, Task.ExtractAudio);
-            bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bw_RunWorkerCompleted);
+            bw.RunWorkerCompleted += bw_RunWorkerCompleted;
             bw.RunWorkerAsync(argument);
         }
 
@@ -434,10 +437,10 @@ namespace VideoExtractor
 
             if (videoInfo.FPS > 0)
             {
-                comboBox3.Text = videoInfo.FPS.ToString();
+                comboBox3.Text = videoInfo.FPS.ToString(CultureInfo.InvariantCulture);
             }
 
-            if (videoInfo.Size != null && videoInfo.Size.Width * videoInfo.Size.Height > 0)
+            if (videoInfo.Size.Width * videoInfo.Size.Height > 0)
             {
                 numericUpDown2.Value = videoInfo.Size.Width;
                 numericUpDown8.Value = videoInfo.Size.Height;
@@ -486,7 +489,7 @@ namespace VideoExtractor
 
             BackgroundWorker bw2 = new BackgroundWorker();
             bw2.DoWork += (obj, ea) => bw_DoWork(argument, Task.ExtractImages);
-            bw2.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bw2_RunWorkerCompleted);
+            bw2.RunWorkerCompleted += bw2_RunWorkerCompleted;
             bw2.RunWorkerAsync(argument);
         }
 
@@ -508,16 +511,14 @@ namespace VideoExtractor
         {
             string ms = (textBox5.Text.Length == 12) ? textBox5.Text.Remove(0, 9) : "000";
 
-            TimeSpan ts = new TimeSpan(0, 0, trackBar1.Value);
-            textBox5.Text = String.Format("{0:00}:{1:00}:{2:00}.{3:000}", ts.Hours, ts.Minutes, ts.Seconds, ms);
+            textBox5.Text = Utility.GetTimeSpanText(trackBar1.Value) + "." + ms;
         }
 
         private void trackBar2_ValueChanged(object sender, EventArgs e)
         {
             string ms = (textBox8.Text.Length == 12) ? textBox8.Text.Remove(0, 9) : "000";
 
-            TimeSpan ts = new TimeSpan(0, 0, trackBar2.Value);
-            textBox8.Text = String.Format("{0:00}:{1:00}:{2:00}.{3:000}", ts.Hours, ts.Minutes, ts.Seconds, ms);
+            textBox8.Text = Utility.GetTimeSpanText(trackBar2.Value) + "." + ms;
 
             label11.Visible = (trackBar2.Value == 0);
         }
@@ -526,28 +527,24 @@ namespace VideoExtractor
         {
             try
             {
-                TimeSpan ts = new TimeSpan(
-                    Convert.ToInt32(textBox5.Text.Remove(2, 10)),
-                    Convert.ToInt32(textBox5.Text.Remove(5, 7).Remove(0, 3)),
-                    Convert.ToInt32(textBox5.Text.Remove(8, 4).Remove(0, 6))
-                );
-                trackBar1.Value = (int)ts.TotalSeconds;
+                trackBar1.Value = (int)Utility.GetTotalSeconds(textBox5.Text);
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
 
         private void textBox8_TextChanged(object sender, EventArgs e)
         {
             try
             {
-                TimeSpan ts = new TimeSpan(
-                    Convert.ToInt32(textBox8.Text.Remove(2, 10)),
-                    Convert.ToInt32(textBox8.Text.Remove(5, 7).Remove(0, 3)),
-                    Convert.ToInt32(textBox8.Text.Remove(8, 4).Remove(0, 6))
-                );
-                trackBar2.Value = (int)ts.TotalSeconds;
+                trackBar2.Value = (int)Utility.GetTotalSeconds(textBox8.Text);
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
 
         private void numericUpDown2_ValueChanged(object sender, EventArgs e)
@@ -599,7 +596,7 @@ namespace VideoExtractor
 
             BackgroundWorker bw3 = new BackgroundWorker();
             bw3.DoWork += (obj, ea) => bw_DoWork(argument, Task.RemoveAudio);
-            bw3.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bw3_RunWorkerCompleted);
+            bw3.RunWorkerCompleted += bw3_RunWorkerCompleted;
             bw3.RunWorkerAsync(argument);
         }
 
@@ -626,7 +623,8 @@ namespace VideoExtractor
 
         private void textBox15_TextChanged(object sender, EventArgs e)
         {
-            textBox15.Text = textBox15.Text.Replace(@"\\", @"\");
+            FileInfo fi = new FileInfo(textBox15.Text);
+            comboBox4.Text = fi.Extension.Remove(0, 1).ToUpper();
         }
 
         private void comboBox6_TextChanged(object sender, EventArgs e)
@@ -655,7 +653,10 @@ namespace VideoExtractor
                 FileInfo fi = new FileInfo(textBox15.Text);
                 textBox15.Text = fi.FullName.Replace(fi.Extension, "") + "." + comboBox4.Text.ToLower();
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
 
         private void button22_Click(object sender, EventArgs e)
@@ -694,7 +695,7 @@ namespace VideoExtractor
 
             BackgroundWorker bw6 = new BackgroundWorker();
             bw6.DoWork += (obj, ea) => bw_DoWork(argument, Task.MakeVideo);
-            bw6.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bw6_RunWorkerCompleted);
+            bw6.RunWorkerCompleted += bw6_RunWorkerCompleted;
             bw6.RunWorkerAsync(argument);
         }
 
@@ -745,7 +746,7 @@ namespace VideoExtractor
                 comboBox7.Text = fi.Extension.Remove(0, 1).ToUpper();
             }
 
-            if (videoInfo.Size != null)
+            if (videoInfo.Size.Width * videoInfo.Size.Height > 0)
             {
                 numericUpDown6.Value = videoInfo.Size.Width;
                 numericUpDown7.Value = videoInfo.Size.Height;
@@ -769,7 +770,10 @@ namespace VideoExtractor
                 FileInfo fi = new FileInfo(textBox11.Text);
                 textBox11.Text = fi.FullName.Replace(fi.Extension, "") + "." + comboBox7.Text.ToLower();
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
 
         private void button14_Click(object sender, EventArgs e)
@@ -805,7 +809,7 @@ namespace VideoExtractor
 
             BackgroundWorker bw4 = new BackgroundWorker();
             bw4.DoWork += (obj, ea) => bw_DoWork(argument, Task.ResizeVideo);
-            bw4.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bw4_RunWorkerCompleted);
+            bw4.RunWorkerCompleted += bw4_RunWorkerCompleted;
             bw4.RunWorkerAsync(argument);
         }
 
@@ -878,7 +882,7 @@ namespace VideoExtractor
 
             BackgroundWorker bw5 = new BackgroundWorker();
             bw5.DoWork += (obj, ea) => bw_DoWork(argument, Task.CropVideo);
-            bw5.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bw5_RunWorkerCompleted);
+            bw5.RunWorkerCompleted += bw5_RunWorkerCompleted;
             bw5.RunWorkerAsync(argument);
         }
 
@@ -936,7 +940,7 @@ namespace VideoExtractor
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start(HomePage);
+            Process.Start(Properties.Resources.HomePage);
         }
 
         private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -977,7 +981,7 @@ namespace VideoExtractor
             }
             else
             {
-                _textBrush = new System.Drawing.SolidBrush(e.ForeColor);
+                _textBrush = new SolidBrush(e.ForeColor);
                 e.DrawBackground();
             }
 
@@ -1000,22 +1004,32 @@ namespace VideoExtractor
             switch (tabControl1.TabPages.IndexOf((TabPage)sender))
             {
                 case 0:
+                    if (!fi.Exists)
+                        return;
                     textBox1.Text = files[0];
                     textBox2.Text = files[0].Replace(fi.Extension, "") + ".mp3";
                     break;
                 case 1:
+                    if (!fi.Exists)
+                        return;
                     textBox6.Text = files[0];
                     textBox7.Text = fi.FullName.Replace(fi.Extension, "") + "_noaudio" + fi.Extension;
                     break;
                 case 2:
+                    if (!fi.Exists)
+                        return;
                     textBox3.Text = files[0];
                     textBox4.Text = fi.FullName.Replace(fi.Extension, "") + "_Images";
                     break;
                 case 3:
+                    if (!fi.Exists)
+                        return;
                     textBox10.Text = files[0];
                     textBox11.Text = fi.FullName.Replace(fi.Extension, "") + "_resized" + fi.Extension;
                     break;
                 case 4:
+                    if (!fi.Exists)
+                        return;
                     textBox12.Text = files[0];
                     textBox13.Text = fi.FullName.Replace(fi.Extension, "") + "_new" + fi.Extension;
                     break;

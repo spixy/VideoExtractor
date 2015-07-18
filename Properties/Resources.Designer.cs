@@ -61,6 +61,15 @@ namespace VideoExtractor.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to settings.ini.
+        /// </summary>
+        internal static string ConfigFile {
+            get {
+                return ResourceManager.GetString("ConfigFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap ffmpeg_logo {
@@ -71,12 +80,39 @@ namespace VideoExtractor.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to https://github.com/spixy/VideoExtractor.
+        /// </summary>
+        internal static string HomePage {
+            get {
+                return ResourceManager.GetString("HomePage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to log.txt.
+        /// </summary>
+        internal static string LogFile {
+            get {
+                return ResourceManager.GetString("LogFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap Open {
             get {
                 object obj = ResourceManager.GetObject("Open", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://raw.githubusercontent.com/spixy/VideoExtractor/master/lastversion.
+        /// </summary>
+        internal static string UpdateFile {
+            get {
+                return ResourceManager.GetString("UpdateFile", resourceCulture);
             }
         }
     }

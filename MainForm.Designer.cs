@@ -162,6 +162,7 @@
             this.checkBox2 = new System.Windows.Forms.CheckBox();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.linkLabel3 = new System.Windows.Forms.LinkLabel();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.label19 = new System.Windows.Forms.Label();
             this.linkLabel2 = new System.Windows.Forms.LinkLabel();
@@ -173,7 +174,6 @@
             this.label14 = new System.Windows.Forms.Label();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
-            this.linkLabel3 = new System.Windows.Forms.LinkLabel();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar4)).BeginInit();
@@ -1809,6 +1809,19 @@
             this.tabPage4.Text = "About";
             this.tabPage4.UseVisualStyleBackColor = true;
             // 
+            // linkLabel3
+            // 
+            this.linkLabel3.AutoSize = true;
+            this.linkLabel3.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
+            this.linkLabel3.Location = new System.Drawing.Point(7, 382);
+            this.linkLabel3.Name = "linkLabel3";
+            this.linkLabel3.Size = new System.Drawing.Size(150, 18);
+            this.linkLabel3.TabIndex = 9;
+            this.linkLabel3.TabStop = true;
+            this.linkLabel3.Text = "New version available";
+            this.linkLabel3.Visible = false;
+            this.linkLabel3.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
+            // 
             // pictureBox1
             // 
             this.pictureBox1.Image = global::VideoExtractor.Properties.Resources.ffmpeg_logo;
@@ -1909,18 +1922,6 @@
             this.openFileDialog1.Filter = "AVI|*.avi|FLV|*.flv|MOV|*.mov|MKV|*.mkv|MPG|*.mpg|MPEG|*.mpeg|MP4|*.mp4|WEBM|*.we" +
     "bm|WMV|*.wmv|All files|*.*";
             this.openFileDialog1.FilterIndex = 10;
-            // 
-            // linkLabel3
-            // 
-            this.linkLabel3.AutoSize = true;
-            this.linkLabel3.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            this.linkLabel3.Location = new System.Drawing.Point(7, 382);
-            this.linkLabel3.Name = "linkLabel3";
-            this.linkLabel3.Size = new System.Drawing.Size(150, 18);
-            this.linkLabel3.TabIndex = 9;
-            this.linkLabel3.TabStop = true;
-            this.linkLabel3.Text = "New version available";
-            this.linkLabel3.Visible = false;
             // 
             // MainForm
             // 
