@@ -28,6 +28,12 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.ListViewGroup listViewGroup1 = new System.Windows.Forms.ListViewGroup("Extracting audio", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup2 = new System.Windows.Forms.ListViewGroup("Removing audio", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup3 = new System.Windows.Forms.ListViewGroup("Extracting Images", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup4 = new System.Windows.Forms.ListViewGroup("Resizing video", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup5 = new System.Windows.Forms.ListViewGroup("Cropping audio", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup6 = new System.Windows.Forms.ListViewGroup("Creating video", System.Windows.Forms.HorizontalAlignment.Left);
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
@@ -41,7 +47,6 @@
             this.comboBox8 = new System.Windows.Forms.ComboBox();
             this.label44 = new System.Windows.Forms.Label();
             this.comboBox5 = new System.Windows.Forms.ComboBox();
-            this.button10 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
@@ -55,7 +60,6 @@
             this.button1 = new System.Windows.Forms.Button();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.tabPage5 = new System.Windows.Forms.TabPage();
-            this.button11 = new System.Windows.Forms.Button();
             this.button9 = new System.Windows.Forms.Button();
             this.label12 = new System.Windows.Forms.Label();
             this.textBox7 = new System.Windows.Forms.TextBox();
@@ -74,7 +78,6 @@
             this.label47 = new System.Windows.Forms.Label();
             this.textBox8 = new System.Windows.Forms.TextBox();
             this.trackBar2 = new System.Windows.Forms.TrackBar();
-            this.button12 = new System.Windows.Forms.Button();
             this.label11 = new System.Windows.Forms.Label();
             this.textBox5 = new System.Windows.Forms.TextBox();
             this.label10 = new System.Windows.Forms.Label();
@@ -100,7 +103,6 @@
             this.label43 = new System.Windows.Forms.Label();
             this.numericUpDown6 = new System.Windows.Forms.NumericUpDown();
             this.label31 = new System.Windows.Forms.Label();
-            this.button17 = new System.Windows.Forms.Button();
             this.label32 = new System.Windows.Forms.Label();
             this.button16 = new System.Windows.Forms.Button();
             this.numericUpDown7 = new System.Windows.Forms.NumericUpDown();
@@ -114,7 +116,6 @@
             this.button14 = new System.Windows.Forms.Button();
             this.tabPage8 = new System.Windows.Forms.TabPage();
             this.checkBox4 = new System.Windows.Forms.CheckBox();
-            this.button21 = new System.Windows.Forms.Button();
             this.button20 = new System.Windows.Forms.Button();
             this.label29 = new System.Windows.Forms.Label();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
@@ -130,10 +131,10 @@
             this.numericUpDown5 = new System.Windows.Forms.NumericUpDown();
             this.textBox12 = new System.Windows.Forms.TextBox();
             this.label38 = new System.Windows.Forms.Label();
-            this.button18 = new System.Windows.Forms.Button();
             this.numericUpDown3 = new System.Windows.Forms.NumericUpDown();
-            this.button19 = new System.Windows.Forms.Button();
             this.label35 = new System.Windows.Forms.Label();
+            this.button18 = new System.Windows.Forms.Button();
+            this.button19 = new System.Windows.Forms.Button();
             this.tabPage9 = new System.Windows.Forms.TabPage();
             this.comboBox4 = new System.Windows.Forms.ComboBox();
             this.label57 = new System.Windows.Forms.Label();
@@ -143,7 +144,6 @@
             this.comboBox6 = new System.Windows.Forms.ComboBox();
             this.label45 = new System.Windows.Forms.Label();
             this.label42 = new System.Windows.Forms.Label();
-            this.button24 = new System.Windows.Forms.Button();
             this.button25 = new System.Windows.Forms.Button();
             this.label20 = new System.Windows.Forms.Label();
             this.textBox14 = new System.Windows.Forms.TextBox();
@@ -151,9 +151,14 @@
             this.textBox15 = new System.Windows.Forms.TextBox();
             this.button22 = new System.Windows.Forms.Button();
             this.button23 = new System.Windows.Forms.Button();
-            this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.queueTab = new System.Windows.Forms.TabPage();
+            this.queueStopButton = new System.Windows.Forms.Button();
+            this.listView1 = new System.Windows.Forms.ListView();
+            this.InputHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.OutputHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.outputTab = new System.Windows.Forms.TabPage();
             this.outputLog = new System.Windows.Forms.TextBox();
-            this.tabPage6 = new System.Windows.Forms.TabPage();
+            this.settingsTab = new System.Windows.Forms.TabPage();
             this.checkBox6 = new System.Windows.Forms.CheckBox();
             this.checkBox5 = new System.Windows.Forms.CheckBox();
             this.textBox9 = new System.Windows.Forms.TextBox();
@@ -161,9 +166,8 @@
             this.checkBox3 = new System.Windows.Forms.CheckBox();
             this.checkBox2 = new System.Windows.Forms.CheckBox();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
-            this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.aboutTab = new System.Windows.Forms.TabPage();
             this.linkLabel3 = new System.Windows.Forms.LinkLabel();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.label19 = new System.Windows.Forms.Label();
             this.linkLabel2 = new System.Windows.Forms.LinkLabel();
             this.label18 = new System.Windows.Forms.Label();
@@ -172,6 +176,7 @@
             this.label16 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.tabControl1.SuspendLayout();
@@ -193,9 +198,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown5)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown3)).BeginInit();
             this.tabPage9.SuspendLayout();
-            this.tabPage3.SuspendLayout();
-            this.tabPage6.SuspendLayout();
-            this.tabPage4.SuspendLayout();
+            this.queueTab.SuspendLayout();
+            this.outputTab.SuspendLayout();
+            this.settingsTab.SuspendLayout();
+            this.aboutTab.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -209,9 +215,10 @@
             this.tabControl1.Controls.Add(this.tabPage7);
             this.tabControl1.Controls.Add(this.tabPage8);
             this.tabControl1.Controls.Add(this.tabPage9);
-            this.tabControl1.Controls.Add(this.tabPage3);
-            this.tabControl1.Controls.Add(this.tabPage6);
-            this.tabControl1.Controls.Add(this.tabPage4);
+            this.tabControl1.Controls.Add(this.queueTab);
+            this.tabControl1.Controls.Add(this.outputTab);
+            this.tabControl1.Controls.Add(this.settingsTab);
+            this.tabControl1.Controls.Add(this.aboutTab);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
             this.tabControl1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
@@ -241,7 +248,6 @@
             this.tabPage1.Controls.Add(this.comboBox8);
             this.tabPage1.Controls.Add(this.label44);
             this.tabPage1.Controls.Add(this.comboBox5);
-            this.tabPage1.Controls.Add(this.button10);
             this.tabPage1.Controls.Add(this.button3);
             this.tabPage1.Controls.Add(this.label5);
             this.tabPage1.Controls.Add(this.label4);
@@ -391,23 +397,12 @@
             this.comboBox5.TabIndex = 16;
             this.comboBox5.Validating += new System.ComponentModel.CancelEventHandler(this.comboBox_Validating);
             // 
-            // button10
-            // 
-            this.button10.Enabled = false;
-            this.button10.Location = new System.Drawing.Point(460, 340);
-            this.button10.Name = "button10";
-            this.button10.Size = new System.Drawing.Size(110, 40);
-            this.button10.TabIndex = 15;
-            this.button10.Text = "Stop";
-            this.button10.UseVisualStyleBackColor = true;
-            this.button10.Click += new System.EventHandler(this.button10_Click);
-            // 
             // button3
             // 
             this.button3.Enabled = false;
-            this.button3.Location = new System.Drawing.Point(320, 340);
+            this.button3.Location = new System.Drawing.Point(420, 330);
             this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(110, 40);
+            this.button3.Size = new System.Drawing.Size(140, 45);
             this.button3.TabIndex = 14;
             this.button3.Tag = "";
             this.button3.Text = "Start";
@@ -544,7 +539,6 @@
             // tabPage5
             // 
             this.tabPage5.AllowDrop = true;
-            this.tabPage5.Controls.Add(this.button11);
             this.tabPage5.Controls.Add(this.button9);
             this.tabPage5.Controls.Add(this.label12);
             this.tabPage5.Controls.Add(this.textBox7);
@@ -563,23 +557,12 @@
             this.tabPage5.DragDrop += new System.Windows.Forms.DragEventHandler(this.tabPage1_DragDrop);
             this.tabPage5.DragEnter += new System.Windows.Forms.DragEventHandler(this.tabPage1_DragEnter);
             // 
-            // button11
-            // 
-            this.button11.Enabled = false;
-            this.button11.Location = new System.Drawing.Point(460, 340);
-            this.button11.Name = "button11";
-            this.button11.Size = new System.Drawing.Size(110, 40);
-            this.button11.TabIndex = 18;
-            this.button11.Text = "Stop";
-            this.button11.UseVisualStyleBackColor = true;
-            this.button11.Click += new System.EventHandler(this.button11_Click);
-            // 
             // button9
             // 
             this.button9.Enabled = false;
-            this.button9.Location = new System.Drawing.Point(320, 340);
+            this.button9.Location = new System.Drawing.Point(420, 330);
             this.button9.Name = "button9";
-            this.button9.Size = new System.Drawing.Size(110, 40);
+            this.button9.Size = new System.Drawing.Size(140, 45);
             this.button9.TabIndex = 17;
             this.button9.Tag = "";
             this.button9.Text = "Start";
@@ -654,7 +637,6 @@
             this.tabPage2.Controls.Add(this.label47);
             this.tabPage2.Controls.Add(this.textBox8);
             this.tabPage2.Controls.Add(this.trackBar2);
-            this.tabPage2.Controls.Add(this.button12);
             this.tabPage2.Controls.Add(this.label11);
             this.tabPage2.Controls.Add(this.textBox5);
             this.tabPage2.Controls.Add(this.label10);
@@ -786,17 +768,6 @@
             this.trackBar2.TickFrequency = 300;
             this.trackBar2.ValueChanged += new System.EventHandler(this.trackBar2_ValueChanged);
             // 
-            // button12
-            // 
-            this.button12.Enabled = false;
-            this.button12.Location = new System.Drawing.Point(460, 340);
-            this.button12.Name = "button12";
-            this.button12.Size = new System.Drawing.Size(110, 40);
-            this.button12.TabIndex = 30;
-            this.button12.Text = "Stop";
-            this.button12.UseVisualStyleBackColor = true;
-            this.button12.Click += new System.EventHandler(this.button12_Click);
-            // 
             // label11
             // 
             this.label11.AutoSize = true;
@@ -923,9 +894,9 @@
             // button4
             // 
             this.button4.Enabled = false;
-            this.button4.Location = new System.Drawing.Point(320, 340);
+            this.button4.Location = new System.Drawing.Point(420, 330);
             this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(110, 40);
+            this.button4.Size = new System.Drawing.Size(140, 45);
             this.button4.TabIndex = 15;
             this.button4.Tag = "";
             this.button4.Text = "Start";
@@ -965,7 +936,6 @@
             this.tabPage7.Controls.Add(this.label43);
             this.tabPage7.Controls.Add(this.numericUpDown6);
             this.tabPage7.Controls.Add(this.label31);
-            this.tabPage7.Controls.Add(this.button17);
             this.tabPage7.Controls.Add(this.label32);
             this.tabPage7.Controls.Add(this.button16);
             this.tabPage7.Controls.Add(this.numericUpDown7);
@@ -1095,17 +1065,6 @@
             this.label31.TabIndex = 40;
             this.label31.Text = "Width";
             // 
-            // button17
-            // 
-            this.button17.Enabled = false;
-            this.button17.Location = new System.Drawing.Point(460, 340);
-            this.button17.Name = "button17";
-            this.button17.Size = new System.Drawing.Size(110, 40);
-            this.button17.TabIndex = 39;
-            this.button17.Text = "Stop";
-            this.button17.UseVisualStyleBackColor = true;
-            this.button17.Click += new System.EventHandler(this.button16_Click);
-            // 
             // label32
             // 
             this.label32.AutoSize = true;
@@ -1118,9 +1077,9 @@
             // button16
             // 
             this.button16.Enabled = false;
-            this.button16.Location = new System.Drawing.Point(320, 340);
+            this.button16.Location = new System.Drawing.Point(420, 330);
             this.button16.Name = "button16";
-            this.button16.Size = new System.Drawing.Size(110, 40);
+            this.button16.Size = new System.Drawing.Size(140, 45);
             this.button16.TabIndex = 38;
             this.button16.Tag = "";
             this.button16.Text = "Start";
@@ -1217,7 +1176,6 @@
             // 
             this.tabPage8.AllowDrop = true;
             this.tabPage8.Controls.Add(this.checkBox4);
-            this.tabPage8.Controls.Add(this.button21);
             this.tabPage8.Controls.Add(this.button20);
             this.tabPage8.Controls.Add(this.label29);
             this.tabPage8.Controls.Add(this.numericUpDown1);
@@ -1233,10 +1191,10 @@
             this.tabPage8.Controls.Add(this.numericUpDown5);
             this.tabPage8.Controls.Add(this.textBox12);
             this.tabPage8.Controls.Add(this.label38);
-            this.tabPage8.Controls.Add(this.button18);
             this.tabPage8.Controls.Add(this.numericUpDown3);
-            this.tabPage8.Controls.Add(this.button19);
             this.tabPage8.Controls.Add(this.label35);
+            this.tabPage8.Controls.Add(this.button18);
+            this.tabPage8.Controls.Add(this.button19);
             this.tabPage8.Location = new System.Drawing.Point(94, 4);
             this.tabPage8.Name = "tabPage8";
             this.tabPage8.Size = new System.Drawing.Size(604, 407);
@@ -1257,23 +1215,12 @@
             this.checkBox4.UseVisualStyleBackColor = true;
             this.checkBox4.CheckedChanged += new System.EventHandler(this.checkBox4_CheckedChanged);
             // 
-            // button21
-            // 
-            this.button21.Enabled = false;
-            this.button21.Location = new System.Drawing.Point(460, 340);
-            this.button21.Name = "button21";
-            this.button21.Size = new System.Drawing.Size(110, 40);
-            this.button21.TabIndex = 66;
-            this.button21.Text = "Stop";
-            this.button21.UseVisualStyleBackColor = true;
-            this.button21.Click += new System.EventHandler(this.button21_Click);
-            // 
             // button20
             // 
             this.button20.Enabled = false;
-            this.button20.Location = new System.Drawing.Point(320, 340);
+            this.button20.Location = new System.Drawing.Point(420, 330);
             this.button20.Name = "button20";
-            this.button20.Size = new System.Drawing.Size(110, 40);
+            this.button20.Size = new System.Drawing.Size(140, 45);
             this.button20.TabIndex = 65;
             this.button20.Tag = "";
             this.button20.Text = "Start";
@@ -1418,16 +1365,6 @@
             this.label38.TabIndex = 49;
             this.label38.Text = "px";
             // 
-            // button18
-            // 
-            this.button18.Image = global::VideoExtractor.Properties.Resources.Open;
-            this.button18.Location = new System.Drawing.Point(545, 61);
-            this.button18.Name = "button18";
-            this.button18.Size = new System.Drawing.Size(33, 31);
-            this.button18.TabIndex = 63;
-            this.button18.UseVisualStyleBackColor = true;
-            this.button18.Click += new System.EventHandler(this.button18_Click);
-            // 
             // numericUpDown3
             // 
             this.numericUpDown3.Location = new System.Drawing.Point(80, 175);
@@ -1440,6 +1377,25 @@
             this.numericUpDown3.Size = new System.Drawing.Size(70, 24);
             this.numericUpDown3.TabIndex = 33;
             // 
+            // label35
+            // 
+            this.label35.AutoSize = true;
+            this.label35.Location = new System.Drawing.Point(156, 143);
+            this.label35.Name = "label35";
+            this.label35.Size = new System.Drawing.Size(23, 18);
+            this.label35.TabIndex = 46;
+            this.label35.Text = "px";
+            // 
+            // button18
+            // 
+            this.button18.Image = global::VideoExtractor.Properties.Resources.Open;
+            this.button18.Location = new System.Drawing.Point(545, 61);
+            this.button18.Name = "button18";
+            this.button18.Size = new System.Drawing.Size(33, 31);
+            this.button18.TabIndex = 63;
+            this.button18.UseVisualStyleBackColor = true;
+            this.button18.Click += new System.EventHandler(this.button18_Click);
+            // 
             // button19
             // 
             this.button19.Image = global::VideoExtractor.Properties.Resources.Open;
@@ -1449,15 +1405,6 @@
             this.button19.TabIndex = 60;
             this.button19.UseVisualStyleBackColor = true;
             this.button19.Click += new System.EventHandler(this.button19_Click);
-            // 
-            // label35
-            // 
-            this.label35.AutoSize = true;
-            this.label35.Location = new System.Drawing.Point(156, 143);
-            this.label35.Name = "label35";
-            this.label35.Size = new System.Drawing.Size(23, 18);
-            this.label35.TabIndex = 46;
-            this.label35.Text = "px";
             // 
             // tabPage9
             // 
@@ -1470,7 +1417,6 @@
             this.tabPage9.Controls.Add(this.comboBox6);
             this.tabPage9.Controls.Add(this.label45);
             this.tabPage9.Controls.Add(this.label42);
-            this.tabPage9.Controls.Add(this.button24);
             this.tabPage9.Controls.Add(this.button25);
             this.tabPage9.Controls.Add(this.label20);
             this.tabPage9.Controls.Add(this.textBox14);
@@ -1589,23 +1535,12 @@
             this.label42.TabIndex = 30;
             this.label42.Text = "Images in folder: 0";
             // 
-            // button24
-            // 
-            this.button24.Enabled = false;
-            this.button24.Location = new System.Drawing.Point(460, 340);
-            this.button24.Name = "button24";
-            this.button24.Size = new System.Drawing.Size(110, 40);
-            this.button24.TabIndex = 29;
-            this.button24.Text = "Stop";
-            this.button24.UseVisualStyleBackColor = true;
-            this.button24.Click += new System.EventHandler(this.button24_Click);
-            // 
             // button25
             // 
             this.button25.Enabled = false;
-            this.button25.Location = new System.Drawing.Point(320, 340);
+            this.button25.Location = new System.Drawing.Point(420, 330);
             this.button25.Name = "button25";
-            this.button25.Size = new System.Drawing.Size(110, 40);
+            this.button25.Size = new System.Drawing.Size(140, 45);
             this.button25.TabIndex = 28;
             this.button25.Tag = "";
             this.button25.Text = "Start";
@@ -1668,17 +1603,85 @@
             this.button23.UseVisualStyleBackColor = true;
             this.button23.Click += new System.EventHandler(this.button23_Click);
             // 
-            // tabPage3
+            // queueTab
             // 
-            this.tabPage3.Controls.Add(this.outputLog);
-            this.tabPage3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.tabPage3.Location = new System.Drawing.Point(94, 4);
-            this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(604, 407);
-            this.tabPage3.TabIndex = 2;
-            this.tabPage3.Text = "Output ";
-            this.tabPage3.UseVisualStyleBackColor = true;
+            this.queueTab.Controls.Add(this.queueStopButton);
+            this.queueTab.Controls.Add(this.listView1);
+            this.queueTab.Location = new System.Drawing.Point(94, 4);
+            this.queueTab.Name = "queueTab";
+            this.queueTab.Size = new System.Drawing.Size(604, 407);
+            this.queueTab.TabIndex = 9;
+            this.queueTab.Text = "Queue";
+            this.queueTab.UseVisualStyleBackColor = true;
+            // 
+            // queueStopButton
+            // 
+            this.queueStopButton.Enabled = false;
+            this.queueStopButton.Location = new System.Drawing.Point(420, 330);
+            this.queueStopButton.Name = "queueStopButton";
+            this.queueStopButton.Size = new System.Drawing.Size(140, 45);
+            this.queueStopButton.TabIndex = 17;
+            this.queueStopButton.Text = "Stop";
+            this.queueStopButton.UseVisualStyleBackColor = true;
+            this.queueStopButton.Click += new System.EventHandler(this.queueStopButton_Click);
+            // 
+            // listView1
+            // 
+            this.listView1.Activation = System.Windows.Forms.ItemActivation.OneClick;
+            this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.InputHeader,
+            this.OutputHeader});
+            this.listView1.FullRowSelect = true;
+            this.listView1.GridLines = true;
+            listViewGroup1.Header = "Extracting audio";
+            listViewGroup1.Name = "ExtractAudioGroup";
+            listViewGroup2.Header = "Removing audio";
+            listViewGroup2.Name = "RemoveAudioGroup";
+            listViewGroup3.Header = "Extracting Images";
+            listViewGroup3.Name = "ExtractImagesGroup";
+            listViewGroup4.Header = "Resizing video";
+            listViewGroup4.Name = "ResizeVideoGroup";
+            listViewGroup5.Header = "Cropping audio";
+            listViewGroup5.Name = "CropAudioGroup";
+            listViewGroup6.Header = "Creating video";
+            listViewGroup6.Name = "CreateVideoGroup";
+            this.listView1.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
+            listViewGroup1,
+            listViewGroup2,
+            listViewGroup3,
+            listViewGroup4,
+            listViewGroup5,
+            listViewGroup6});
+            this.listView1.HideSelection = false;
+            this.listView1.Location = new System.Drawing.Point(9, 8);
+            this.listView1.Name = "listView1";
+            this.listView1.Size = new System.Drawing.Size(587, 296);
+            this.listView1.TabIndex = 1;
+            this.listView1.UseCompatibleStateImageBehavior = false;
+            this.listView1.View = System.Windows.Forms.View.Details;
+            this.listView1.SelectedIndexChanged += new System.EventHandler(this.listView1_SelectedIndexChanged);
+            // 
+            // InputHeader
+            // 
+            this.InputHeader.Text = "Input";
+            this.InputHeader.Width = 291;
+            // 
+            // OutputHeader
+            // 
+            this.OutputHeader.Text = "Output";
+            this.OutputHeader.Width = 292;
+            // 
+            // outputTab
+            // 
+            this.outputTab.Controls.Add(this.outputLog);
+            this.outputTab.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.outputTab.Location = new System.Drawing.Point(94, 4);
+            this.outputTab.Name = "outputTab";
+            this.outputTab.Padding = new System.Windows.Forms.Padding(3);
+            this.outputTab.Size = new System.Drawing.Size(604, 407);
+            this.outputTab.TabIndex = 2;
+            this.outputTab.Text = "Output ";
+            this.outputTab.UseVisualStyleBackColor = true;
             // 
             // outputLog
             // 
@@ -1693,22 +1696,22 @@
             this.outputLog.Size = new System.Drawing.Size(598, 401);
             this.outputLog.TabIndex = 0;
             // 
-            // tabPage6
+            // settingsTab
             // 
-            this.tabPage6.Controls.Add(this.checkBox6);
-            this.tabPage6.Controls.Add(this.checkBox5);
-            this.tabPage6.Controls.Add(this.textBox9);
-            this.tabPage6.Controls.Add(this.label24);
-            this.tabPage6.Controls.Add(this.checkBox3);
-            this.tabPage6.Controls.Add(this.checkBox2);
-            this.tabPage6.Controls.Add(this.checkBox1);
-            this.tabPage6.Location = new System.Drawing.Point(94, 4);
-            this.tabPage6.Name = "tabPage6";
-            this.tabPage6.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage6.Size = new System.Drawing.Size(604, 407);
-            this.tabPage6.TabIndex = 5;
-            this.tabPage6.Text = "Settings";
-            this.tabPage6.UseVisualStyleBackColor = true;
+            this.settingsTab.Controls.Add(this.checkBox6);
+            this.settingsTab.Controls.Add(this.checkBox5);
+            this.settingsTab.Controls.Add(this.textBox9);
+            this.settingsTab.Controls.Add(this.label24);
+            this.settingsTab.Controls.Add(this.checkBox3);
+            this.settingsTab.Controls.Add(this.checkBox2);
+            this.settingsTab.Controls.Add(this.checkBox1);
+            this.settingsTab.Location = new System.Drawing.Point(94, 4);
+            this.settingsTab.Name = "settingsTab";
+            this.settingsTab.Padding = new System.Windows.Forms.Padding(3);
+            this.settingsTab.Size = new System.Drawing.Size(604, 407);
+            this.settingsTab.TabIndex = 5;
+            this.settingsTab.Text = "Settings";
+            this.settingsTab.UseVisualStyleBackColor = true;
             // 
             // checkBox6
             // 
@@ -1788,26 +1791,26 @@
             this.checkBox1.UseVisualStyleBackColor = true;
             this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
             // 
-            // tabPage4
+            // aboutTab
             // 
-            this.tabPage4.Controls.Add(this.linkLabel3);
-            this.tabPage4.Controls.Add(this.pictureBox1);
-            this.tabPage4.Controls.Add(this.label19);
-            this.tabPage4.Controls.Add(this.linkLabel2);
-            this.tabPage4.Controls.Add(this.label18);
-            this.tabPage4.Controls.Add(this.linkLabel1);
-            this.tabPage4.Controls.Add(this.label17);
-            this.tabPage4.Controls.Add(this.label16);
-            this.tabPage4.Controls.Add(this.label15);
-            this.tabPage4.Controls.Add(this.label14);
-            this.tabPage4.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.tabPage4.Location = new System.Drawing.Point(94, 4);
-            this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage4.Size = new System.Drawing.Size(604, 407);
-            this.tabPage4.TabIndex = 3;
-            this.tabPage4.Text = "About";
-            this.tabPage4.UseVisualStyleBackColor = true;
+            this.aboutTab.Controls.Add(this.linkLabel3);
+            this.aboutTab.Controls.Add(this.label19);
+            this.aboutTab.Controls.Add(this.linkLabel2);
+            this.aboutTab.Controls.Add(this.label18);
+            this.aboutTab.Controls.Add(this.linkLabel1);
+            this.aboutTab.Controls.Add(this.label17);
+            this.aboutTab.Controls.Add(this.label16);
+            this.aboutTab.Controls.Add(this.label15);
+            this.aboutTab.Controls.Add(this.label14);
+            this.aboutTab.Controls.Add(this.pictureBox1);
+            this.aboutTab.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.aboutTab.Location = new System.Drawing.Point(94, 4);
+            this.aboutTab.Name = "aboutTab";
+            this.aboutTab.Padding = new System.Windows.Forms.Padding(3);
+            this.aboutTab.Size = new System.Drawing.Size(604, 407);
+            this.aboutTab.TabIndex = 3;
+            this.aboutTab.Text = "About";
+            this.aboutTab.UseVisualStyleBackColor = true;
             // 
             // linkLabel3
             // 
@@ -1821,16 +1824,6 @@
             this.linkLabel3.Text = "New version available";
             this.linkLabel3.Visible = false;
             this.linkLabel3.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
-            // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Image = global::VideoExtractor.Properties.Resources.ffmpeg_logo;
-            this.pictureBox1.Location = new System.Drawing.Point(456, 42);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(101, 24);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox1.TabIndex = 8;
-            this.pictureBox1.TabStop = false;
             // 
             // label19
             // 
@@ -1917,6 +1910,16 @@
             this.label14.TabIndex = 0;
             this.label14.Text = "Video Extractor";
             // 
+            // pictureBox1
+            // 
+            this.pictureBox1.Image = global::VideoExtractor.Properties.Resources.ffmpeg_logo;
+            this.pictureBox1.Location = new System.Drawing.Point(456, 42);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(101, 24);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBox1.TabIndex = 8;
+            this.pictureBox1.TabStop = false;
+            // 
             // openFileDialog1
             // 
             this.openFileDialog1.Filter = "AVI|*.avi|FLV|*.flv|MOV|*.mov|MKV|*.mkv|MPG|*.mpg|MPEG|*.mpeg|MP4|*.mp4|WEBM|*.we" +
@@ -1933,6 +1936,7 @@
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Video Extractor";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.tabControl1.ResumeLayout(false);
@@ -1960,12 +1964,13 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown3)).EndInit();
             this.tabPage9.ResumeLayout(false);
             this.tabPage9.PerformLayout();
-            this.tabPage3.ResumeLayout(false);
-            this.tabPage3.PerformLayout();
-            this.tabPage6.ResumeLayout(false);
-            this.tabPage6.PerformLayout();
-            this.tabPage4.ResumeLayout(false);
-            this.tabPage4.PerformLayout();
+            this.queueTab.ResumeLayout(false);
+            this.outputTab.ResumeLayout(false);
+            this.outputTab.PerformLayout();
+            this.settingsTab.ResumeLayout(false);
+            this.settingsTab.PerformLayout();
+            this.aboutTab.ResumeLayout(false);
+            this.aboutTab.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
 
@@ -1990,7 +1995,7 @@
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
-        private System.Windows.Forms.TabPage tabPage3;
+        private System.Windows.Forms.TabPage outputTab;
         private System.Windows.Forms.TextBox outputLog;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Button button5;
@@ -2006,7 +2011,7 @@
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.TrackBar trackBar1;
         private System.Windows.Forms.Label label11;
-        private System.Windows.Forms.TabPage tabPage4;
+        private System.Windows.Forms.TabPage aboutTab;
         private System.Windows.Forms.TabPage tabPage5;
         private System.Windows.Forms.Button button9;
         private System.Windows.Forms.Label label12;
@@ -2023,13 +2028,10 @@
         private System.Windows.Forms.LinkLabel linkLabel2;
         private System.Windows.Forms.Label label18;
         private System.Windows.Forms.Label label19;
-        private System.Windows.Forms.Button button10;
-        private System.Windows.Forms.Button button11;
-        private System.Windows.Forms.Button button12;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.TextBox textBox8;
         private System.Windows.Forms.TrackBar trackBar2;
-        private System.Windows.Forms.TabPage tabPage6;
+        private System.Windows.Forms.TabPage settingsTab;
         private System.Windows.Forms.CheckBox checkBox2;
         private System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.CheckBox checkBox3;
@@ -2042,7 +2044,6 @@
         private System.Windows.Forms.TextBox textBox10;
         private System.Windows.Forms.Button button13;
         private System.Windows.Forms.Button button14;
-        private System.Windows.Forms.Button button17;
         private System.Windows.Forms.Button button16;
         private System.Windows.Forms.Label label34;
         private System.Windows.Forms.Label label33;
@@ -2069,7 +2070,6 @@
         private System.Windows.Forms.Label label36;
         private System.Windows.Forms.NumericUpDown numericUpDown5;
         private System.Windows.Forms.Label label35;
-        private System.Windows.Forms.Button button21;
         private System.Windows.Forms.Button button20;
         private System.Windows.Forms.CheckBox checkBox4;
         private System.Windows.Forms.ComboBox comboBox7;
@@ -2077,7 +2077,6 @@
         private System.Windows.Forms.ComboBox comboBox8;
         private System.Windows.Forms.Label label44;
         private System.Windows.Forms.TabPage tabPage9;
-        private System.Windows.Forms.Button button24;
         private System.Windows.Forms.Button button25;
         private System.Windows.Forms.Label label20;
         private System.Windows.Forms.TextBox textBox14;
@@ -2118,6 +2117,11 @@
         private System.Windows.Forms.Label label57;
         private System.Windows.Forms.CheckBox checkBox6;
         private System.Windows.Forms.LinkLabel linkLabel3;
+        private System.Windows.Forms.TabPage queueTab;
+        private System.Windows.Forms.Button queueStopButton;
+        private System.Windows.Forms.ListView listView1;
+        private System.Windows.Forms.ColumnHeader InputHeader;
+        private System.Windows.Forms.ColumnHeader OutputHeader;
     }
 }
 

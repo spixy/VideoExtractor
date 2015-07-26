@@ -1,25 +1,39 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Net;
-using System.Reflection;
+using System.Windows.Forms;
 
 namespace VideoExtractor
 {
     public class Updater
     {
-        public string CurrentVersion { get; set; }
+        /// <summary>
+        /// Latest application version
+        /// </summary>
+        public string LatestVersion { get; private set; }
 
+        /// <summary>
+        /// File with latest application version
+        /// </summary>
         public string UpdateFile { get; set; }
 
+        /// <summary>
+        /// Asynchronious action occurs when update is available after calling IsUpdateAvailableAsync()
+        /// </summary>
         public Action UpdateAvailableAction { get; set; }
 
-
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="updateFile">File with latest application version</param>
         public Updater(string updateFile)
         {
             UpdateFile = updateFile;
-            CurrentVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         }
 
+        /// <summary>
+        /// Asynchroniously check if update is available
+        /// </summary>
         public void IsUpdateAvailableAsync()
         {
             BackgroundWorker bw = new BackgroundWorker();
@@ -40,16 +54,20 @@ namespace VideoExtractor
         {
             e.Result = IsUpdateAvailable();
         }
-        
+
+        /// <summary>
+        /// Check if update is available
+        /// </summary>
         public bool IsUpdateAvailable()
         {
             try
             {
-                WebClient update = new WebClient();
-                string new_ver = update.DownloadString(UpdateFile);
-                update.Dispose();
+                using (WebClient update = new WebClient())
+                {
+                    LatestVersion = update.DownloadString(UpdateFile);
+                }
 
-                return (new_ver != CurrentVersion);
+                return (LatestVersion != Application.ProductVersion);
             }
             catch
             {

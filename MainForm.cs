@@ -6,22 +6,12 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Media;
-using System.Reflection;
 using System.Windows.Forms;
 
 namespace VideoExtractor
 {
     public partial class MainForm : Form
     {
-        private enum Task
-        {
-            ExtractAudio,
-            RemoveAudio,
-            ExtractImages,
-            ResizeVideo,
-            CropVideo,
-            MakeVideo
-        }
 
         private bool OpenExplorer = true;
         private bool CheckUpdates = true;
@@ -30,8 +20,6 @@ namespace VideoExtractor
 
         private readonly Logger logger = new Logger(Properties.Resources.LogFile, false);
         private readonly List<Process> processes = new List<Process>();
-        private TabPage outputTab;
-        private Process extractAudio, removeAudio, extractImages, resizeVideo, cropVideo, makeVideo;
 
         // GENERAL
 
@@ -50,13 +38,12 @@ namespace VideoExtractor
             comboBox9.SelectedIndex = 1;
             comboBox10.SelectedIndex = 10;
 
-            outputTab = tabPage3;
             tabControl1.TabPages.Remove(outputTab);
 
             MinimumSize = Size;
             MaximumSize = Size;
 
-            label15.Text = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            label15.Text = Application.ProductVersion;
 
             int Bits = IntPtr.Size * 8;
             label19.Text = Bits + "-bit";
@@ -136,6 +123,16 @@ namespace VideoExtractor
             }
         }
 
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if ((e.CloseReason == CloseReason.UserClosing || e.CloseReason == CloseReason.TaskManagerClosing) &&
+                processes.Count > 0 &&
+                MessageBox.Show("Process is still running. Do you want to cancel process?", "Warning", MessageBoxButtons.YesNo) == DialogResult.No)
+            {
+                e.Cancel = true;
+            }
+        }
+
         private void WriteToOutput(string text)
         {
             if (!OutputEnabled)
@@ -145,16 +142,16 @@ namespace VideoExtractor
             {
                 outputLog.Invoke((MethodInvoker)delegate
                 {
-                    outputLog.Text += text + "\r\n";
+                    outputLog.Text += text + Environment.NewLine;
                 });
             }
             else
             {
-                outputLog.Text += text + "\r\n";
+                outputLog.Text += text + Environment.NewLine;
             }
         }
 
-        private void bw_DoWork(string arguments, Task task)
+        private void bw_DoWork(object sender, DoWorkEventArgs e, JobInfo jobInfo)
         {
             if (!File.Exists(ffmpeg))
             {
@@ -166,13 +163,18 @@ namespace VideoExtractor
                 return;
             }
 
-            Process p = new Process();
-            p.StartInfo.FileName = ffmpeg;
-            p.StartInfo.Arguments = arguments;
-            p.StartInfo.UseShellExecute = false;
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.RedirectStandardError = true;
-            p.StartInfo.CreateNoWindow = true;
+            Process p = new Process
+            {
+                StartInfo =
+                {
+                    FileName = ffmpeg,
+                    Arguments = jobInfo.Arguments,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
 
             p.OutputDataReceived += (s, ea) =>
             {
@@ -186,26 +188,66 @@ namespace VideoExtractor
                 logger.Log(ea.Data);
             };
 
-            p.Start();
+            var item = AddToQueue(jobInfo, p);
             processes.Add(p);
 
-            switch (task)
-            {
-                case Task.ExtractAudio: extractAudio = p; break;
-                case Task.RemoveAudio: removeAudio = p; break;
-                case Task.ExtractImages: extractImages = p; break;
-                case Task.ResizeVideo: resizeVideo = p; break;
-                case Task.CropVideo: cropVideo = p; break;
-                case Task.MakeVideo: makeVideo = p; break;
-            }
+            p.Start();
 
             p.BeginOutputReadLine();
             p.BeginErrorReadLine();
 
             p.WaitForExit();
+
+            listView1.Invoke((MethodInvoker) delegate
+            {
+                listView1.Items.Remove(item);
+            });
             processes.Remove(p);
+
+            switch (p.ExitCode)
+            {
+                // Kill()
+                case -1:
+                    jobInfo.Result = Result.Cancel;
+                    break;
+
+                // OK
+                case 0:
+                    jobInfo.Result = Result.Success;
+                    break;
+
+                // ffmpeg error
+                default:
+                    jobInfo.Result = Result.Error;
+                    break;
+            }
+
+            e.Result = jobInfo;
             p.Dispose();
         }
+
+        private void bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            JobInfo jobInfo = (JobInfo) e.Result;
+
+            switch (jobInfo.Result)
+            {
+                case Result.Success:
+                    LaunchExplorer(jobInfo.Output);
+                    break;
+
+                case Result.Error:
+                    SystemSounds.Hand.Play();
+                    goto case Result.Cancel;
+
+                case Result.Cancel:
+                    if (Directory.Exists(jobInfo.Output))
+                        Directory.Delete(jobInfo.Output, true);
+                    if (File.Exists(jobInfo.Output))
+                        File.Delete(jobInfo.Output);
+                    break;
+            }
+        }    
 
         private void LaunchExplorer(string file)
         {
@@ -225,12 +267,6 @@ namespace VideoExtractor
             else
             {
                 SystemSounds.Hand.Play();
-
-                if (OutputEnabled)
-                {
-                    tabControl1.SelectedIndex = 6;
-                    outputLog.SelectionLength = 0;
-                }
             }
         }
 
@@ -306,7 +342,7 @@ namespace VideoExtractor
             if (comboBox8.Text.ToUpper() == "MP3" && comboBox2.Text != "Default")
             {
                 int val;
-                if (Int32.TryParse(comboBox2.Text, out val) && val > 320)
+                if (int.TryParse(comboBox2.Text, out val) && val > 320)
                     comboBox2.Text = "320";
             }
         }
@@ -335,7 +371,7 @@ namespace VideoExtractor
         {
             try
             {
-                trackBar3.Value = (int) Utility.GetTotalSeconds(textBox16.Text);
+                trackBar3.Value = Utility.GetTotalSeconds(textBox16.Text);
             }
             catch
             {
@@ -347,7 +383,7 @@ namespace VideoExtractor
         {
             try
             {
-                trackBar4.Value = (int)Utility.GetTotalSeconds(textBox17.Text);
+                trackBar4.Value = Utility.GetTotalSeconds(textBox17.Text);
             }
             catch
             {
@@ -394,34 +430,19 @@ namespace VideoExtractor
 
         private void button3_Click(object sender, EventArgs e)
         {
-            button3.Enabled = false;
-            button10.Enabled = true;
-
-            string argument = Utility.ExtractAudio_Arguments(textBox1.Text, textBox2.Text,
+            JobInfo jobInfo = Utility.ExtractAudio(textBox1.Text, textBox2.Text,
                 comboBox1.Text, comboBox2.Text, comboBox5.Text, textBox16.Text, textBox17.Text);
 
-            logger.Log("ffmpeg.exe " + argument);
+            logger.Log("ffmpeg.exe " + jobInfo.Arguments);
+
+            tabControl1.SelectTab(queueTab);
 
             BackgroundWorker bw = new BackgroundWorker();
-            bw.DoWork += (obj, ea) => bw_DoWork(argument, Task.ExtractAudio);
+            bw.DoWork += (obj, ea) => bw_DoWork(obj, ea, jobInfo);
             bw.RunWorkerCompleted += bw_RunWorkerCompleted;
-            bw.RunWorkerAsync(argument);
+            bw.RunWorkerAsync();
         }
-
-        private void button10_Click(object sender, EventArgs e)
-        {
-            if (!extractAudio.HasExited)
-                extractAudio.Kill();
-        }
-
-        private void bw_RunWorkerCompleted(object sender, AsyncCompletedEventArgs e)
-        {
-            button3.Enabled = true;
-            button10.Enabled = false;
-
-            LaunchExplorer(textBox2.Text);
-        }       
-
+   
         // EXTRACT IMAGES
 
         private void textBox4_TextChanged(object sender, EventArgs e)
@@ -471,12 +492,9 @@ namespace VideoExtractor
 
         private void button4_Click(object sender, EventArgs e)
         {
-            button4.Enabled = false;
-            button12.Enabled = true;
-
             string output = (textBox4.Text + "\\image_%d." + comboBox9.Text.ToLower()).Replace(@"\\", @"\");
 
-            string argument = Utility.ExtractImages_Arguments(textBox3.Text, output,
+            JobInfo jobInfo = Utility.ExtractImages(textBox3.Text, output,
                 (int)numericUpDown2.Value, (int)numericUpDown8.Value, comboBox3.Text.Replace(',','.'), textBox5.Text, textBox8.Text);
 
             if (!Directory.Exists(textBox4.Text))
@@ -485,24 +503,19 @@ namespace VideoExtractor
                 logger.Log(textBox4.Text + " directory created");
             }
 
-            logger.Log("ffmpeg.exe " + argument);
+            logger.Log("ffmpeg.exe " + jobInfo.Arguments);
 
-            BackgroundWorker bw2 = new BackgroundWorker();
-            bw2.DoWork += (obj, ea) => bw_DoWork(argument, Task.ExtractImages);
-            bw2.RunWorkerCompleted += bw2_RunWorkerCompleted;
-            bw2.RunWorkerAsync(argument);
-        }
+            tabControl1.SelectTab(queueTab);
 
-        private void button12_Click(object sender, EventArgs e)
-        {
-            if (!extractImages.HasExited)
-                extractImages.Kill();
+            BackgroundWorker bw = new BackgroundWorker();
+            bw.DoWork += (obj, ea) => bw_DoWork(obj, ea, jobInfo);
+            bw.RunWorkerCompleted += bw2_RunWorkerCompleted;
+            bw.RunWorkerAsync();
         }
 
         private void bw2_RunWorkerCompleted(object sender, AsyncCompletedEventArgs e)
         {
             button4.Enabled = true;
-            button12.Enabled = false;
 
             LaunchExplorer(textBox4.Text);
         }
@@ -527,7 +540,7 @@ namespace VideoExtractor
         {
             try
             {
-                trackBar1.Value = (int)Utility.GetTotalSeconds(textBox5.Text);
+                trackBar1.Value = Utility.GetTotalSeconds(textBox5.Text);
             }
             catch
             {
@@ -539,7 +552,7 @@ namespace VideoExtractor
         {
             try
             {
-                trackBar2.Value = (int)Utility.GetTotalSeconds(textBox8.Text);
+                trackBar2.Value = Utility.GetTotalSeconds(textBox8.Text);
             }
             catch
             {
@@ -587,31 +600,16 @@ namespace VideoExtractor
 
         private void button9_Click(object sender, EventArgs e)
         {
-            button9.Enabled = false;
-            button11.Enabled = true;
+            JobInfo jobInfo = Utility.RemoveAudio(textBox6.Text, textBox7.Text);
 
-            string argument = Utility.RemoveAudio_Arguments(textBox6.Text, textBox7.Text);
+            logger.Log("ffmpeg.exe " + jobInfo.Arguments);
 
-            logger.Log("ffmpeg.exe " + argument);
+            tabControl1.SelectTab(queueTab);
 
-            BackgroundWorker bw3 = new BackgroundWorker();
-            bw3.DoWork += (obj, ea) => bw_DoWork(argument, Task.RemoveAudio);
-            bw3.RunWorkerCompleted += bw3_RunWorkerCompleted;
-            bw3.RunWorkerAsync(argument);
-        }
-
-        private void button11_Click(object sender, EventArgs e)
-        {
-            if (!removeAudio.HasExited)
-                removeAudio.Kill();
-        }
-
-        private void bw3_RunWorkerCompleted(object sender, AsyncCompletedEventArgs e)
-        {
-            button9.Enabled = true;
-            button12.Enabled = false;
-
-            LaunchExplorer(textBox7.Text);
+            BackgroundWorker bw = new BackgroundWorker();
+            bw.DoWork += (obj, ea) => bw_DoWork(obj, ea, jobInfo);
+            bw.RunWorkerCompleted += bw_RunWorkerCompleted;
+            bw.RunWorkerAsync();
         }
 
         // CREATE VIDEO
@@ -684,25 +682,18 @@ namespace VideoExtractor
 
         private void button25_Click(object sender, EventArgs e)
         {
-            button25.Enabled = false;
-            button24.Enabled = true;
-
             string input = textBox14.Text + "\\" + comboBox6.Text;
 
-            string argument = Utility.CreateVideo_Arguments(input, textBox15.Text, comboBox10.Text);
+            JobInfo jobInfo = Utility.CreateVideo(input, textBox15.Text, comboBox10.Text);
 
-            logger.Log("ffmpeg.exe " + argument);
+            logger.Log("ffmpeg.exe " + jobInfo.Arguments);
 
-            BackgroundWorker bw6 = new BackgroundWorker();
-            bw6.DoWork += (obj, ea) => bw_DoWork(argument, Task.MakeVideo);
-            bw6.RunWorkerCompleted += bw6_RunWorkerCompleted;
-            bw6.RunWorkerAsync(argument);
-        }
+            tabControl1.SelectTab(queueTab);
 
-        private void button24_Click(object sender, EventArgs e)
-        {
-            if (!makeVideo.HasExited)
-                makeVideo.Kill();
+            BackgroundWorker bw = new BackgroundWorker();
+            bw.DoWork += (obj, ea) => bw_DoWork(obj, ea, jobInfo);
+            bw.RunWorkerCompleted += bw_RunWorkerCompleted;
+            bw.RunWorkerAsync();
         }
 
         private void LoadImages()
@@ -721,14 +712,6 @@ namespace VideoExtractor
                 label42.Text = "Images in folder: " + count;
                 button25.Enabled = (count > 0);
             }
-        }
-
-        private void bw6_RunWorkerCompleted(object sender, AsyncCompletedEventArgs e)
-        {
-            button25.Enabled = true;
-            button24.Enabled = false;
-
-            LaunchExplorer(textBox15.Text);
         }
 
         // RESIZE VIDEO
@@ -799,32 +782,17 @@ namespace VideoExtractor
 
         private void button17_Click(object sender, EventArgs e)
         {
-            button16.Enabled = false;
-            button17.Enabled = true;
-
-            string argument = Utility.ResizeVideo_Arguments(textBox10.Text, textBox11.Text,
+            JobInfo jobInfo = Utility.ResizeVideo(textBox10.Text, textBox11.Text,
                 (int)numericUpDown6.Value, (int)numericUpDown7.Value, comboBox11.Text, comboBox12.Text);
 
-            logger.Log("ffmpeg.exe " + argument);
+            logger.Log("ffmpeg.exe " + jobInfo.Arguments);
 
-            BackgroundWorker bw4 = new BackgroundWorker();
-            bw4.DoWork += (obj, ea) => bw_DoWork(argument, Task.ResizeVideo);
-            bw4.RunWorkerCompleted += bw4_RunWorkerCompleted;
-            bw4.RunWorkerAsync(argument);
-        }
+            tabControl1.SelectTab(queueTab);
 
-        private void button16_Click(object sender, EventArgs e)
-        {
-            if (!resizeVideo.HasExited)
-                resizeVideo.Kill();
-        }
-
-        private void bw4_RunWorkerCompleted(object sender, AsyncCompletedEventArgs e)
-        {
-            button16.Enabled = true;
-            button17.Enabled = false;
-
-            LaunchExplorer(textBox11.Text);
+            BackgroundWorker bw = new BackgroundWorker();
+            bw.DoWork += (obj, ea) => bw_DoWork(obj, ea, jobInfo);
+            bw.RunWorkerCompleted += bw_RunWorkerCompleted;
+            bw.RunWorkerAsync();
         }
 
         private void numericUpDown6_ValueChanged(object sender, EventArgs e)
@@ -872,32 +840,64 @@ namespace VideoExtractor
 
         private void button20_Click(object sender, EventArgs e)
         {
-            button20.Enabled = false;
-            button21.Enabled = true;
-
-            string argument = Utility.CropVideo_Arguments(textBox12.Text, textBox13.Text,
+            JobInfo jobInfo = Utility.CropVideo(textBox12.Text, textBox13.Text,
                 (int)numericUpDown1.Value, (int)numericUpDown3.Value, checkBox4.Checked, (int)numericUpDown5.Value, (int)numericUpDown4.Value);
 
-            logger.Log("ffmpeg.exe " + argument);
+            logger.Log("ffmpeg.exe " + jobInfo.Arguments);
 
-            BackgroundWorker bw5 = new BackgroundWorker();
-            bw5.DoWork += (obj, ea) => bw_DoWork(argument, Task.CropVideo);
-            bw5.RunWorkerCompleted += bw5_RunWorkerCompleted;
-            bw5.RunWorkerAsync(argument);
+            tabControl1.SelectTab(queueTab);
+
+            BackgroundWorker bw = new BackgroundWorker();
+            bw.DoWork += (obj, ea) => bw_DoWork(obj, ea, jobInfo);
+            bw.RunWorkerCompleted += bw_RunWorkerCompleted;
+            bw.RunWorkerAsync();
         }
 
-        private void button21_Click(object sender, EventArgs e)
+        // QUEUE
+
+        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (!cropVideo.HasExited)
-                cropVideo.Kill();
+            queueStopButton.Enabled = listView1.SelectedItems.Count > 0;
         }
 
-        private void bw5_RunWorkerCompleted(object sender, AsyncCompletedEventArgs e)
+        private ListViewItem AddToQueue(JobInfo jobInfo, Process ffmpegProcess)
         {
-            button20.Enabled = true;
-            button21.Enabled = false;
+            ListViewItem item = new ListViewItem();
+            item.Group = listView1.Groups[(int)jobInfo.Task];
+            item.Tag = ffmpegProcess;
+            item.Text = jobInfo.Input;
+            item.SubItems.Add(jobInfo.Output);
 
-            LaunchExplorer(textBox13.Text);
+            if (listView1.InvokeRequired)
+            {
+                listView1.Invoke((MethodInvoker) delegate
+                {
+                    listView1.Items.Add(item);
+                });
+            }
+            else
+            {
+                listView1.Items.Add(item);
+            }
+
+            return item;
+        }
+
+        private void queueStopButton_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listView1.SelectedItems)
+            {
+                try
+                {
+                    Process process = (Process) item.Tag;
+                    process.Kill();
+                }
+                catch
+                {
+                    // ignored
+                }
+                listView1.Items.Remove(item);
+            }
         }
 
         // SETTINGS
@@ -923,7 +923,7 @@ namespace VideoExtractor
 
             if (OutputEnabled)
             {
-                tabControl1.TabPages.Insert(6, outputTab);
+                tabControl1.TabPages.Insert(7, outputTab);
             }
             else
             {
@@ -952,10 +952,14 @@ namespace VideoExtractor
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (OutputEnabled && tabControl1.SelectedIndex == 6)
+            if (tabControl1.SelectedTab == outputTab && OutputEnabled)
+            {
                 MaximumSize = new Size(0, 0);
+            }
             else
+            {
                 MaximumSize = MinimumSize;
+            }
 
             linkLabel3.Parent = tabControl1.SelectedTab;
         }
@@ -986,9 +990,11 @@ namespace VideoExtractor
             }
 
             // Draw string. Center the text.
-            StringFormat _stringFlags = new StringFormat();
-            _stringFlags.Alignment = StringAlignment.Center;
-            _stringFlags.LineAlignment = StringAlignment.Center;
+            StringFormat _stringFlags = new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            };
             g.DrawString(_tabPage.Text, _tabFont, _textBrush, _tabBounds, new StringFormat(_stringFlags));
         }
 

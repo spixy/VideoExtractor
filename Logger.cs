@@ -20,7 +20,8 @@ namespace VideoExtractor
 
         public void Clear()
         {
-            File.WriteAllBytes(LogFile, new Byte[0]);
+            if (File.Exists(LogFile))
+                File.Delete(LogFile);
         }
 
         public void Log(string err)
