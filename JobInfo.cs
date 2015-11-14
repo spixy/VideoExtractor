@@ -1,4 +1,6 @@
-﻿namespace VideoExtractor
+﻿using System.Diagnostics;
+
+namespace VideoExtractor
 {
     enum Task
     {
@@ -23,6 +25,7 @@
         public string Input { get; private set; }
         public string Output { get; private set; }
         public string Arguments { get; private set; }
+        public Process Process { get; private set; }
         public Task Task { get; private set; }
         public Result Result { get; set; }
 
@@ -40,6 +43,29 @@
             Task = task;
             Arguments = arguments;
             Result = Result.NotAvailable;
+        }
+
+        /// <summary>
+        /// Creates FFmpeg process
+        /// </summary>
+        /// <param name="ffmpeg">FFmpeg path</param>
+        /// <returns>FFmpeg process</returns>
+        public Process CreateProcess(string ffmpeg)
+        {
+            Process = new Process
+            {
+                StartInfo =
+                {
+                    FileName = ffmpeg,
+                    Arguments = Arguments,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
+
+            return Process;
         }
     }
 }

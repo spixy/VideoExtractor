@@ -1,22 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Drawing;
-using System.Globalization;
 using System.IO;
+using System.Media;
 
 namespace VideoExtractor
 {
-    struct VideoInfo
-    {
-        public Size Size;
-        public int Channels;
-        public int SampleRate;
-        public int AudioBitRate;
-        public int VideoBitRate;
-        public double FPS;
-        public int Duration;
-    }
-
     static class Utility
     {
         /// <summary>
@@ -45,7 +33,7 @@ namespace VideoExtractor
         /// <summary>
         /// Returns job to extract audio
         /// </summary>
-        public static JobInfo ExtractAudio(string input, string output, string samplerate, string bitrate, string channel, string startDate, string duration)
+        public static JobInfo ExtractAudio(string input, string output, string samplerate, string bitrate, string channel, string startDate, string duration, bool overwrite)
         {
             int val;
 
@@ -55,7 +43,7 @@ namespace VideoExtractor
             startDate = (!startDate.Contains("00:00:00.000")) ? " -ss " + startDate : "";
             duration = (!duration.Contains("00:00:00.000")) ? " -t " + duration : "";
 
-            string arguments = "-i \"" + input + "\" -y -vn" + channel + samplerate + bitrate + startDate + duration + " \"" + output + "\"";
+            string arguments = "-i \"" + input + "\" -vn" + channel + samplerate + bitrate + startDate + duration + (overwrite ? " -y" : "") + " \"" + output + "\"";
 
             return new JobInfo(input, output, arguments, Task.ExtractAudio);
         }
@@ -63,13 +51,13 @@ namespace VideoExtractor
         /// <summary>
         /// Returns job to extract images
         /// </summary>
-        public static JobInfo ExtractImages(string input, string output, int width, int height, string fps, string startDate, string duration)
+        public static JobInfo ExtractImages(string input, string output, int width, int height, string fps, string startDate, string duration, bool overwrite)
         {
             startDate = (!startDate.Contains("00:00:00.000")) ? " -ss " + startDate : "";
             duration = (!duration.Contains("00:00:00.000")) ? " -t " + duration : "";
             string size = (width > 0 && height > 0) ? " -s " + width + "x" + height : "";
 
-            string arguments = "-i \"" + input + "\" -r " + fps + duration + startDate + size + " -f image2 \"" + output + "\"";
+            string arguments = "-i \"" + input + "\" -r " + fps + duration + startDate + size + (overwrite ? " -y" : "") + " -f image2 \"" + output + "\"";
 
             return new JobInfo(input, output, arguments, Task.ExtractImages);
         }
@@ -77,9 +65,9 @@ namespace VideoExtractor
         /// <summary>
         /// Returns job to remove audio
         /// </summary>
-        public static JobInfo RemoveAudio(string input, string output)
+        public static JobInfo RemoveAudio(string input, string output, bool overwrite)
         {
-            string arguments = "-i \"" + input + "\" -y" + " -an \"" + output + "\"";
+            string arguments = "-i \"" + input + "\" -an" + (overwrite ? " -y" : "") + " \"" + output + "\"";
 
             return new JobInfo(input, output, arguments, Task.RemoveAudio);
         }
@@ -87,9 +75,9 @@ namespace VideoExtractor
         /// <summary>
         /// Returns job to create video from images
         /// </summary>
-        public static JobInfo CreateVideo(string input, string output, string fps)
+        public static JobInfo CreateVideo(string input, string output, string fps, bool overwrite)
         {
-            string arguments = "-f image2 -i \"" + input + "\" -y" + " -r " + fps + " \"" + output + "\"";
+            string arguments = "-f image2 -i \"" + input + "\" -r " + fps + (overwrite ? " -y" : "") + " \"" + output + "\"";
 
             return new JobInfo(input, output, arguments, Task.CreateVideo);
         }
@@ -97,7 +85,7 @@ namespace VideoExtractor
         /// <summary>
         /// Returns job to resize video
         /// </summary>
-        public static JobInfo ResizeVideo(string input, string output, int width, int height, string video_bitrate, string audio_bitrate)
+        public static JobInfo ResizeVideo(string input, string output, int width, int height, string video_bitrate, string audio_bitrate, bool overwrite)
         {
             int val;
 
@@ -108,7 +96,7 @@ namespace VideoExtractor
             video_bitrate = (int.TryParse(video_bitrate, out val)) ? " -b:v " + video_bitrate + "k" : "";
             audio_bitrate = (int.TryParse(audio_bitrate, out val)) ? " -b:a " + audio_bitrate + "k" : "";
 
-            string arguments = "-i \"" + input + "\" -y" + video_bitrate + audio_bitrate + size + " \"" + output + "\"";
+            string arguments = "-i \"" + input + "\"" + video_bitrate + audio_bitrate + size + (overwrite ? " -y" : "") + " \"" + output + "\"";
 
             return new JobInfo(input, output, arguments, Task.ResizeVideo);
         }
@@ -116,141 +104,50 @@ namespace VideoExtractor
         /// <summary>
         /// Returns job to crop video
         /// </summary>
-        public static JobInfo CropVideo(string input, string output, int x, int y, bool center, int width, int height)
+        public static JobInfo CropVideo(string input, string output, int x, int y, bool center, int width, int height, bool overwrite)
         {
             string area = (!center) ? ":" + x + ":" + y : "";
-            string arguments = "-i \"" + input + "\" -y" + " -vf crop=" + width + ":" + height + area + " \"" + output + "\"";
+            string arguments = "-i \"" + input + "\" -vf crop=" + width + ":" + height + area + (overwrite ? " -y" : "") + " \"" + output + "\"";
 
             return new JobInfo(input, output, arguments, Task.CropVideo);
         }
 
         /// <summary>
-        /// Parse line and store data to structure
+        /// Launch Explorer with selected file or folder
         /// </summary>
-        private static void loadVideoInfo(string line, ref VideoInfo Video)
+        /// <param name="path">file or folder</param>
+        public static bool LaunchExplorer(string path)
         {
-            if (line.Contains("Duration: "))
+            // File
+            if (File.Exists(path))
             {
-                string[] words = line.Split(' ');
-
-                for (int i = 0; i < words.Length; i++)
-                {
-                    switch (words[i])
-                    {
-                        // Total length
-                        case "Duration:":
-                            string[] times = words[i + 1].Split(':');
-                            times[2] = times[2].Substring(0, 2);
-                            Video.Duration = 3600 * Convert.ToInt32(times[0]) + 60 * Convert.ToInt32(times[1]) + Convert.ToInt32(times[2]) + 1;
-                            break;
-                    }
-                }
+                Process.Start("explorer.exe", @"/select, " + path);
+                return true;
             }
-            else if (line.Contains("Video: "))
+            // Directory
+            else if (Directory.Exists(path))
             {
-                string[] words = line.Split(' ');
-                int w, h;
-
-                for (int i = 0; i < words.Length; i++)
-                {
-                    switch (words[i])
-                    {
-                        // FPS
-                        case "fps":
-                        case "fps,":
-                            double.TryParse(words[i - 1], NumberStyles.Any, CultureInfo.InvariantCulture, out Video.FPS);
-                            continue;
-
-                        // Video bitrate
-                        case "kb/s":
-                        case "kb/s,":
-                            int.TryParse(words[i - 1], out Video.VideoBitRate);
-                            continue;
-                    }
-
-                    // Resolution
-                    string[] ress = words[i].Replace(",", "").Split('x');
-
-                    if (ress.Length == 2 && int.TryParse(ress[0], out w) && int.TryParse(ress[1], out h))
-                    {
-                        Video.Size = new Size(w, h);
-                    }
-                }
-
+                Process.Start("explorer.exe", path);
+                return true;
             }
-            else if (line.Contains("Audio: "))
+            // Not found
+            else
             {
-                string[] words = line.Split(' ');
-
-                for (int i = 0; i < words.Length; i++)
-                {
-                    switch (words[i])
-                    {
-                        // audio channels
-                        case "mono,": Video.Channels = 1; break;
-                        case "stereo,": Video.Channels = 2; break;
-                        case "2.1,": Video.Channels = 3; break;
-                        case "quad,": Video.Channels = 4; break;
-                        case "5.0,": Video.Channels = 5; break;
-                        case "5.1,": Video.Channels = 6; break;
-                        case "7.1,": Video.Channels = 8; break;
-                        // audio sample rate
-                        case "Hz":
-                        case "Hz,": int.TryParse(words[i - 1], out Video.SampleRate); break;
-                        // audio bitrate
-                        case "kb/s":
-                        case "kb/s,": int.TryParse(words[i - 1], out Video.AudioBitRate); break;
-                    }
-                }
+                return false;
             }
         }
 
         /// <summary>
-        /// Get video information from ffmpeg
+        /// Remove file or folder
         /// </summary>
-        /// <param name="ffmpeg">ffmpeg file path</param>
-        /// <param name="filename">video file path</param>
-        public static VideoInfo LoadVideoInfo(string ffmpeg, string filename)
+        /// <param name="path">file or folder</param>
+        public static void RemovePath(string path)
         {
-            VideoInfo Video = new VideoInfo();
+            if (Directory.Exists(path))
+                Directory.Delete(path, true);
 
-            if (!File.Exists(filename) || !File.Exists(ffmpeg))
-                return Video;
-
-            Process p = new Process
-            {
-                StartInfo =
-                {
-                    FileName = ffmpeg,
-                    Arguments = "-i \"" + filename + "\"",
-                    UseShellExecute = false,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                }
-            };
-
-            p.ErrorDataReceived += (s, ea) =>
-            {
-                if (ea.Data == null)
-                    return;
-
-                try
-                {
-                    loadVideoInfo(ea.Data, ref Video);
-                }
-                catch
-                {
-                    // ignored
-                }
-            };
-
-            p.Start();
-            p.BeginErrorReadLine();
-
-            p.WaitForExit();
-            p.Dispose();
-
-            return Video;
+            if (File.Exists(path))
+                File.Delete(path);
         }
     }
 }

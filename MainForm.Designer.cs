@@ -177,8 +177,7 @@
             this.label15 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.checkBox7 = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar4)).BeginInit();
@@ -1698,6 +1697,7 @@
             // 
             // settingsTab
             // 
+            this.settingsTab.Controls.Add(this.checkBox7);
             this.settingsTab.Controls.Add(this.checkBox6);
             this.settingsTab.Controls.Add(this.checkBox5);
             this.settingsTab.Controls.Add(this.textBox9);
@@ -1718,7 +1718,7 @@
             this.checkBox6.AutoSize = true;
             this.checkBox6.Checked = true;
             this.checkBox6.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBox6.Location = new System.Drawing.Point(29, 118);
+            this.checkBox6.Location = new System.Drawing.Point(376, 39);
             this.checkBox6.Name = "checkBox6";
             this.checkBox6.Size = new System.Drawing.Size(185, 22);
             this.checkBox6.TabIndex = 10;
@@ -1728,7 +1728,7 @@
             // checkBox5
             // 
             this.checkBox5.AutoSize = true;
-            this.checkBox5.Location = new System.Drawing.Point(376, 39);
+            this.checkBox5.Location = new System.Drawing.Point(376, 78);
             this.checkBox5.Name = "checkBox5";
             this.checkBox5.Size = new System.Drawing.Size(113, 22);
             this.checkBox5.TabIndex = 9;
@@ -1757,7 +1757,7 @@
             // checkBox3
             // 
             this.checkBox3.AutoSize = true;
-            this.checkBox3.Location = new System.Drawing.Point(376, 78);
+            this.checkBox3.Location = new System.Drawing.Point(376, 118);
             this.checkBox3.Name = "checkBox3";
             this.checkBox3.Size = new System.Drawing.Size(94, 22);
             this.checkBox3.TabIndex = 6;
@@ -1770,7 +1770,7 @@
             this.checkBox2.AutoSize = true;
             this.checkBox2.Checked = true;
             this.checkBox2.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBox2.Location = new System.Drawing.Point(29, 78);
+            this.checkBox2.Location = new System.Drawing.Point(29, 118);
             this.checkBox2.Name = "checkBox2";
             this.checkBox2.Size = new System.Drawing.Size(155, 22);
             this.checkBox2.TabIndex = 4;
@@ -1920,11 +1920,16 @@
             this.pictureBox1.TabIndex = 8;
             this.pictureBox1.TabStop = false;
             // 
-            // openFileDialog1
+            // checkBox7
             // 
-            this.openFileDialog1.Filter = "AVI|*.avi|FLV|*.flv|MOV|*.mov|MKV|*.mkv|MPG|*.mpg|MPEG|*.mpeg|MP4|*.mp4|WEBM|*.we" +
-    "bm|WMV|*.wmv|All files|*.*";
-            this.openFileDialog1.FilterIndex = 10;
+            this.checkBox7.AutoSize = true;
+            this.checkBox7.Location = new System.Drawing.Point(29, 78);
+            this.checkBox7.Name = "checkBox7";
+            this.checkBox7.Size = new System.Drawing.Size(123, 22);
+            this.checkBox7.TabIndex = 11;
+            this.checkBox7.Text = "Overwrite files";
+            this.checkBox7.UseVisualStyleBackColor = true;
+            this.checkBox7.CheckedChanged += new System.EventHandler(this.checkBox7_CheckedChanged);
             // 
             // MainForm
             // 
@@ -1993,8 +1998,6 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.TabPage tabPage2;
-        private System.Windows.Forms.OpenFileDialog openFileDialog1;
-        private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.TabPage outputTab;
         private System.Windows.Forms.TextBox outputLog;
         private System.Windows.Forms.Label label6;
@@ -2122,6 +2125,7 @@
         private System.Windows.Forms.ListView listView1;
         private System.Windows.Forms.ColumnHeader InputHeader;
         private System.Windows.Forms.ColumnHeader OutputHeader;
+        private System.Windows.Forms.CheckBox checkBox7;
     }
 }
 

@@ -10,12 +10,12 @@
 ### Download
 
 * Full version
- * ![v2.0 32-bit (rar)](https://github.com/spixy/VideoExtractor/releases/download/2.0/VideoExtractor_with_ffmpeg_32.rar)
- * ![v2.0 64-bit (rar)](https://github.com/spixy/VideoExtractor/releases/download/2.0/VideoExtractor_with_ffmpeg_64.rar)
+ * [v2.0.1 32-bit (rar)](https://github.com/spixy/VideoExtractor/releases/download/2.0.1/VideoExtractor_with_ffmpeg_32.rar)
+ * [v2.0.1 64-bit (rar)](https://github.com/spixy/VideoExtractor/releases/download/2.0.1/VideoExtractor_with_ffmpeg_64.rar)
 
 * Without ffmpeg
- * ![v2.0 32-bit (rar)](https://github.com/spixy/VideoExtractor/releases/download/2.0/VideoExtractor32.rar)
- * ![v2.0 64-bit (rar)](https://github.com/spixy/VideoExtractor/releases/download/2.0/VideoExtractor64.rar)
+ * [v2.0.1 32-bit (rar)](https://github.com/spixy/VideoExtractor/releases/download/2.0.1/VideoExtractor32.rar)
+ * [v2.0.1 64-bit (rar)](https://github.com/spixy/VideoExtractor/releases/download/2.0.1/VideoExtractor64.rar)
 
 
 ### Screenshot

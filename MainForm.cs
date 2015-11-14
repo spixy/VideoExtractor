@@ -12,24 +12,47 @@ namespace VideoExtractor
 {
     public partial class MainForm : Form
     {
+        #region PROPERTIES
+
+        private const string FilterVideoAndGif = "AVI|*.avi|FLV|*.flv|GIF|*.gif|MOV|*.mov|MKV|*.mkv|MP4|*.mp4|OGG|*.ogg|WEBM|*.webm|WMV|*.wmv|All files|*.*";
+        private const string FilterVideo = "AVI|*.avi|FLV|*.flv|MOV|*.mov|MKV|*.mkv|MP4|*.mp4|OGG|*.ogg|WEBM|*.webm|WMV|*.wmv|All files|*.*";
+        private const string FilterAudio = "MP2|*.mp2|MP3|*.mp3|MP4|*.mp4|M4A|*.m4a|WAV|*.wav|OGG|*.ogg|WMA|*.wma|All files|*.*";
 
         private bool OpenExplorer = true;
         private bool CheckUpdates = true;
+        private bool OverwriteFiles = false;
         private bool OutputEnabled = false;
         private string ffmpeg = "ffmpeg.exe";
 
         private readonly Logger logger = new Logger(Properties.Resources.LogFile, false);
         private readonly List<Process> processes = new List<Process>();
 
-        // GENERAL
+        private OpenFileDialog _openFileDialog;
+        private OpenFileDialog openFileDialog
+        {
+            get { return _openFileDialog ?? (_openFileDialog = new OpenFileDialog()); }
+        }
+
+        private SaveFileDialog _saveFileDialog;
+        private SaveFileDialog saveFileDialog
+        {
+            get { return _saveFileDialog ?? (_saveFileDialog = new SaveFileDialog()); }
+        }
+
+        private FolderBrowserDialog _folderBrowserDialog;
+        private FolderBrowserDialog folderBrowserDialog
+        {
+            get { return _folderBrowserDialog ?? (_folderBrowserDialog = new FolderBrowserDialog()); }
+        }
+
+        #endregion
+
+        #region GENERAL
 
         public MainForm()
         {
             InitializeComponent();
-        }
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
             comboBox1.SelectedIndex = 0;
             comboBox2.SelectedIndex = 0;
             comboBox3.SelectedIndex = 10;
@@ -40,13 +63,15 @@ namespace VideoExtractor
 
             tabControl1.TabPages.Remove(outputTab);
 
-            MinimumSize = Size;
-            MaximumSize = Size;
-
             label15.Text = Application.ProductVersion;
 
             int Bits = IntPtr.Size * 8;
             label19.Text = Bits + "-bit";
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            MinimumSize = MaximumSize = Size;      
 
             logger.Clear();
 
@@ -54,10 +79,8 @@ namespace VideoExtractor
 
             if (CheckUpdates)
             {
-                Updater updater = new Updater(Properties.Resources.UpdateFile)
-                {
-                    UpdateAvailableAction = () => { linkLabel3.Visible = true; }
-                };
+                Updater updater = new Updater(Properties.Resources.UpdateFile);
+                updater.UpdateAvailableAction = () => linkLabel3.Visible = true;
                 updater.IsUpdateAvailableAsync();
             }
         }
@@ -74,11 +97,12 @@ namespace VideoExtractor
                     if (line.ToLower().Contains("no update")) checkBox2.Checked = false;
                     if (line.ToLower().Contains("file log")) checkBox3.Checked = true;
                     if (line.ToLower().Contains("output")) checkBox5.Checked = true;
-                    if (line.ToLower().Contains("ffmpeg ")) textBox9.Text = line.ToLower().Replace("ffmpeg ", "");
+                    if (line.ToLower().Contains("overwrite")) checkBox7.Checked = true;
+                    if (line.ToLower().Contains("ffmpeg ")) textBox9.Text = line.ToLower().Replace("ffmpeg ", "").Trim();
                     if (line.ToLower().Contains("last tab "))
                     {
                         int index;
-                        if (int.TryParse(line.ToLower().Replace("last tab ", ""), out index) && index >= 0 && index <= 5)
+                        if (int.TryParse(line.ToLower().Replace("last tab ", "").Trim(), out index) && index >= 0 && index <= 5)
                             tabControl1.SelectedIndex = index;
                     }
                 }
@@ -97,12 +121,9 @@ namespace VideoExtractor
                 if (!checkBox2.Checked) file.WriteLine("no update");
                 if (checkBox3.Checked) file.WriteLine("file log");
                 if (checkBox5.Checked) file.WriteLine("output");
+                if (checkBox6.Checked) file.WriteLine("last tab " + tabControl1.SelectedIndex);
+                if (checkBox7.Checked) file.WriteLine("overwrite");
                 file.WriteLine("ffmpeg " + textBox9.Text);
-
-                if (checkBox6.Checked)
-                {
-                    file.WriteLine("last tab " + tabControl1.SelectedIndex);
-                }
             }
         }
 
@@ -133,7 +154,7 @@ namespace VideoExtractor
             }
         }
 
-        private void WriteToOutput(string text)
+        private void OutputTabLog(string text)
         {
             if (!OutputEnabled)
                 return;
@@ -151,45 +172,38 @@ namespace VideoExtractor
             }
         }
 
-        private void bw_DoWork(object sender, DoWorkEventArgs e, JobInfo jobInfo)
+        private void Log(string text)
+        {
+            OutputTabLog(text);
+            logger.Log(text);
+        }
+
+        private void RunAsync(JobInfo jobInfo)
+        {
+            tabControl1.SelectTab(queueTab);
+
+            BackgroundWorker bw = new BackgroundWorker();
+            bw.DoWork += (obj, ea) => bw_DoWork(ea, jobInfo);
+            bw.RunWorkerCompleted += bw_RunWorkerCompleted;
+            bw.RunWorkerAsync();
+        }
+
+        private void bw_DoWork(DoWorkEventArgs e, JobInfo jobInfo)
         {
             if (!File.Exists(ffmpeg))
             {
-                string error = ffmpeg + " not found";
-
-                WriteToOutput(error);
-                logger.Log(error);
-
+                Log(ffmpeg + " not found");
                 return;
             }
 
-            Process p = new Process
-            {
-                StartInfo =
-                {
-                    FileName = ffmpeg,
-                    Arguments = jobInfo.Arguments,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                }
-            };
+            Process p = jobInfo.CreateProcess(ffmpeg);
 
-            p.OutputDataReceived += (s, ea) =>
-            {
-                WriteToOutput(ea.Data);
-                logger.Log(ea.Data);
-            };
+            p.OutputDataReceived += (s, ea) => Log(ea.Data);
+            p.ErrorDataReceived += (s, ea) => Log(ea.Data);
 
-            p.ErrorDataReceived += (s, ea) =>
-            {
-                WriteToOutput(ea.Data);
-                logger.Log(ea.Data);
-            };
+            var item = AddToQueue(jobInfo);
 
-            var item = AddToQueue(jobInfo, p);
-            processes.Add(p);
+            logger.Log(p.StartInfo.FileName + " " + p.StartInfo.Arguments);
 
             p.Start();
 
@@ -198,11 +212,7 @@ namespace VideoExtractor
 
             p.WaitForExit();
 
-            listView1.Invoke((MethodInvoker) delegate
-            {
-                listView1.Items.Remove(item);
-            });
-            processes.Remove(p);
+            RemoveFromQueue(item);
 
             switch (p.ExitCode)
             {
@@ -230,47 +240,52 @@ namespace VideoExtractor
         {
             JobInfo jobInfo = (JobInfo) e.Result;
 
+            if (jobInfo == null)
+            {
+                OnError();
+                return;
+            }
+
             switch (jobInfo.Result)
             {
                 case Result.Success:
-                    LaunchExplorer(jobInfo.Output);
+                    OnSuccess(jobInfo);
                     break;
 
                 case Result.Error:
-                    SystemSounds.Hand.Play();
-                    goto case Result.Cancel;
+                    OnError(jobInfo);
+                    break;
 
                 case Result.Cancel:
-                    if (Directory.Exists(jobInfo.Output))
-                        Directory.Delete(jobInfo.Output, true);
-                    if (File.Exists(jobInfo.Output))
-                        File.Delete(jobInfo.Output);
+                    OnCancel(jobInfo);
                     break;
             }
-        }    
+        }
 
-        private void LaunchExplorer(string file)
+        private void OnSuccess(JobInfo jobInfo)
         {
-            // File
-            if (File.Exists(file))
-            {
-                if (OpenExplorer)
-                    Process.Start("explorer.exe", @"/select, " + file);
-            }
-            // Directory
-            else if (Directory.Exists(file))
-            {
-                if (OpenExplorer)
-                    Process.Start("explorer.exe", file);
-            }
-            // Not found
-            else
+            if (OpenExplorer && !Utility.LaunchExplorer(jobInfo.Output))
             {
                 SystemSounds.Hand.Play();
             }
         }
 
-        // VALIDATION
+        private void OnError(JobInfo jobInfo = null)
+        {
+            SystemSounds.Hand.Play();
+
+            if (jobInfo != null)
+                OnCancel(jobInfo);
+        }
+
+        private void OnCancel(JobInfo jobInfo)
+        {
+            Utility.RemovePath(jobInfo.Output);
+        }
+
+        #endregion
+
+        #region VALIDATION
 
         private void comboBox_Validating(object sender, CancelEventArgs e)
         {
@@ -308,12 +323,14 @@ namespace VideoExtractor
             textBox.BackColor = (valid) ? SystemColors.Window : Color.Red;
         }
 
-        // EXTRACT AUDIO
+        #endregion
+
+        #region EXTRACT AUDIO
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
             button3.Enabled = File.Exists(textBox1.Text);
-            VideoInfo videoInfo = Utility.LoadVideoInfo(ffmpeg, textBox1.Text);
+            VideoInfo videoInfo = VideoInfo.LoadVideoInfo(ffmpeg, textBox1.Text);
 
             if (videoInfo.Channels > 0)
                 comboBox5.Items[0] = "Default (" + videoInfo.Channels + ")";
@@ -409,46 +426,43 @@ namespace VideoExtractor
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
-            {
-                textBox1.Text = openFileDialog1.FileName;
+            openFileDialog.Filter = FilterVideo;
 
-                FileInfo fi = new FileInfo(openFileDialog1.FileName);
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                textBox1.Text = openFileDialog.FileName;
+
+                FileInfo fi = new FileInfo(openFileDialog.FileName);
                 textBox2.Text = fi.FullName.Replace(fi.Extension, ".mp3");
             }
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            saveFileDialog1.Filter = "MP2|*.mp2|MP3|*.mp3|MP4|*.mp4|M4A|*.m4a|WAV|*.wav|OGG|*.ogg|WMA|*.wma|All files|*.*";
+            saveFileDialog.Filter = FilterAudio;
 
-            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                textBox2.Text = saveFileDialog1.FileName;
+                textBox2.Text = saveFileDialog.FileName;
             }
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
             JobInfo jobInfo = Utility.ExtractAudio(textBox1.Text, textBox2.Text,
-                comboBox1.Text, comboBox2.Text, comboBox5.Text, textBox16.Text, textBox17.Text);
+                comboBox1.Text, comboBox2.Text, comboBox5.Text, textBox16.Text, textBox17.Text, OverwriteFiles);
 
-            logger.Log("ffmpeg.exe " + jobInfo.Arguments);
-
-            tabControl1.SelectTab(queueTab);
-
-            BackgroundWorker bw = new BackgroundWorker();
-            bw.DoWork += (obj, ea) => bw_DoWork(obj, ea, jobInfo);
-            bw.RunWorkerCompleted += bw_RunWorkerCompleted;
-            bw.RunWorkerAsync();
+            RunAsync(jobInfo);
         }
    
-        // EXTRACT IMAGES
+        #endregion
+
+        #region EXTRACT IMAGES
 
         private void textBox4_TextChanged(object sender, EventArgs e)
         {
             button4.Enabled = File.Exists(textBox3.Text);
-            VideoInfo videoInfo = Utility.LoadVideoInfo(ffmpeg, textBox3.Text);
+            VideoInfo videoInfo = VideoInfo.LoadVideoInfo(ffmpeg, textBox3.Text);
 
             if (videoInfo.Duration > 0)
             {
@@ -470,54 +484,41 @@ namespace VideoExtractor
 
         private void button6_Click(object sender, EventArgs e)
         {
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
-            {
-                textBox3.Text = openFileDialog1.FileName;
+            openFileDialog.Filter = FilterVideo;
 
-                FileInfo fi = new FileInfo(openFileDialog1.FileName);
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                textBox3.Text = openFileDialog.FileName;
+
+                FileInfo fi = new FileInfo(openFileDialog.FileName);
                 textBox4.Text = fi.FullName.Replace(fi.Extension, "") + "_Images";
             }
         }
 
         private void button5_Click(object sender, EventArgs e)
         {
-            FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
-            folderBrowserDialog1.SelectedPath = textBox3.Text;
+            folderBrowserDialog.SelectedPath = textBox3.Text;
 
-            if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
+            if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
-                textBox4.Text = folderBrowserDialog1.SelectedPath;
+                textBox4.Text = folderBrowserDialog.SelectedPath;
             }
         }
 
         private void button4_Click(object sender, EventArgs e)
         {
-            string output = (textBox4.Text + "\\image_%d." + comboBox9.Text.ToLower()).Replace(@"\\", @"\");
+            string output = textBox4.Text;
 
             JobInfo jobInfo = Utility.ExtractImages(textBox3.Text, output,
-                (int)numericUpDown2.Value, (int)numericUpDown8.Value, comboBox3.Text.Replace(',','.'), textBox5.Text, textBox8.Text);
+                (int)numericUpDown2.Value, (int)numericUpDown8.Value, comboBox3.Text.Replace(',', '.'), textBox5.Text, textBox8.Text, OverwriteFiles);
 
-            if (!Directory.Exists(textBox4.Text))
+            if (!Directory.Exists(output))
             {
-                Directory.CreateDirectory(textBox4.Text);
-                logger.Log(textBox4.Text + " directory created");
+                Directory.CreateDirectory(output);
+                logger.Log("Directory created: " + output);
             }
 
-            logger.Log("ffmpeg.exe " + jobInfo.Arguments);
-
-            tabControl1.SelectTab(queueTab);
-
-            BackgroundWorker bw = new BackgroundWorker();
-            bw.DoWork += (obj, ea) => bw_DoWork(obj, ea, jobInfo);
-            bw.RunWorkerCompleted += bw2_RunWorkerCompleted;
-            bw.RunWorkerAsync();
-        }
-
-        private void bw2_RunWorkerCompleted(object sender, AsyncCompletedEventArgs e)
-        {
-            button4.Enabled = true;
-
-            LaunchExplorer(textBox4.Text);
+            RunAsync(jobInfo);
         }
 
         private void trackBar1_ValueChanged(object sender, EventArgs e)
@@ -570,7 +571,9 @@ namespace VideoExtractor
             label56.Text = (numericUpDown8.Value == 0) ? "px (default)" : "px";
         }
 
-        // REMOVE AUDIO
+        #endregion
+
+        #region REMOVE AUDIO
 
         private void textBox6_TextChanged(object sender, EventArgs e)
         {
@@ -579,40 +582,37 @@ namespace VideoExtractor
 
         private void button8_Click(object sender, EventArgs e)
         {
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
-            {
-                textBox6.Text = openFileDialog1.FileName;
+            openFileDialog.Filter = FilterVideo;
 
-                FileInfo fi = new FileInfo(openFileDialog1.FileName);
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                textBox6.Text = openFileDialog.FileName;
+
+                FileInfo fi = new FileInfo(openFileDialog.FileName);
                 textBox7.Text = fi.FullName.Replace(fi.Extension, "") + "_noaudio" + fi.Extension;
             }
         }
 
         private void button7_Click(object sender, EventArgs e)
         {
-            saveFileDialog1.Filter = "AVI|*.avi|FLV|*.flv|MOV|*.mov|MKV|*.mkv|MP4|*.mp4|OGG|*.ogg|WEBM|*.webm|WMV|*.wmv|All files|*.*";
+            saveFileDialog.Filter = FilterVideo;
 
-            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                textBox7.Text = saveFileDialog1.FileName;
+                textBox7.Text = saveFileDialog.FileName;
             }
         }
 
         private void button9_Click(object sender, EventArgs e)
         {
-            JobInfo jobInfo = Utility.RemoveAudio(textBox6.Text, textBox7.Text);
+            JobInfo jobInfo = Utility.RemoveAudio(textBox6.Text, textBox7.Text, OverwriteFiles);
 
-            logger.Log("ffmpeg.exe " + jobInfo.Arguments);
-
-            tabControl1.SelectTab(queueTab);
-
-            BackgroundWorker bw = new BackgroundWorker();
-            bw.DoWork += (obj, ea) => bw_DoWork(obj, ea, jobInfo);
-            bw.RunWorkerCompleted += bw_RunWorkerCompleted;
-            bw.RunWorkerAsync();
+            RunAsync(jobInfo);
         }
 
-        // CREATE VIDEO
+        #endregion
+
+        #region CREATE VIDEO
 
         private void textBox14_TextChanged(object sender, EventArgs e)
         {
@@ -629,17 +629,17 @@ namespace VideoExtractor
         {
             string text = comboBox6.Text;
 
-            if (comboBox6.Items.Contains(text))
-                return;
+            if (!comboBox6.Items.Contains(text))
+            {
+                string file = text.Split('.')[0];
 
-            string file = text.Split('.')[0];
+                if (!text.Contains("%d"))
+                    file += "%d";
 
-            if (!text.Contains("%d"))
-                file += "%d";
-
-            comboBox6.Items[0] = file + ".bmp";
-            comboBox6.Items[1] = file + ".jpg";
-            comboBox6.Items[2] = file + ".png";
+                comboBox6.Items[0] = file + ".bmp";
+                comboBox6.Items[1] = file + ".jpg";
+                comboBox6.Items[2] = file + ".png";
+            }
 
             LoadImages();
         }
@@ -659,24 +659,25 @@ namespace VideoExtractor
 
         private void button22_Click(object sender, EventArgs e)
         {
-            FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
-            folderBrowserDialog1.SelectedPath = textBox14.Text;
+            folderBrowserDialog.SelectedPath = textBox14.Text;
 
-            if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
+            if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
-                textBox14.Text = folderBrowserDialog1.SelectedPath;
-                textBox15.Text = folderBrowserDialog1.SelectedPath + "\\MyVideo.avi";
+                string selectedPath = folderBrowserDialog.SelectedPath;
+
+                textBox14.Text = selectedPath;
+                textBox15.Text = selectedPath + "\\MyVideo.avi";
                 comboBox4.Text = "AVI";
             }
         }
 
         private void button23_Click(object sender, EventArgs e)
         {
-            saveFileDialog1.Filter = "MP2|*.mp2|MP3|*.mp3|MP4|*.mp4|M4A|*.m4a|WAV|*.wav|OGG|*.ogg|WMA|*.wma|All files|*.*";
+            saveFileDialog.Filter = FilterVideoAndGif;
 
-            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                textBox15.Text = saveFileDialog1.FileName;
+                textBox15.Text = saveFileDialog.FileName;
             }
         }
 
@@ -684,16 +685,9 @@ namespace VideoExtractor
         {
             string input = textBox14.Text + "\\" + comboBox6.Text;
 
-            JobInfo jobInfo = Utility.CreateVideo(input, textBox15.Text, comboBox10.Text);
+            JobInfo jobInfo = Utility.CreateVideo(input, textBox15.Text, comboBox10.Text, OverwriteFiles);
 
-            logger.Log("ffmpeg.exe " + jobInfo.Arguments);
-
-            tabControl1.SelectTab(queueTab);
-
-            BackgroundWorker bw = new BackgroundWorker();
-            bw.DoWork += (obj, ea) => bw_DoWork(obj, ea, jobInfo);
-            bw.RunWorkerCompleted += bw_RunWorkerCompleted;
-            bw.RunWorkerAsync();
+            RunAsync(jobInfo);
         }
 
         private void LoadImages()
@@ -714,13 +708,15 @@ namespace VideoExtractor
             }
         }
 
-        // RESIZE VIDEO
+        #endregion
+
+        #region RESIZE VIDEO
 
         private void textBox10_TextChanged(object sender, EventArgs e)
         {
             button16.Enabled = File.Exists(textBox10.Text);
 
-            VideoInfo videoInfo = Utility.LoadVideoInfo(ffmpeg, textBox10.Text);
+            VideoInfo videoInfo = VideoInfo.LoadVideoInfo(ffmpeg, textBox10.Text);
 
             FileInfo fi = new FileInfo(textBox10.Text);
 
@@ -761,38 +757,33 @@ namespace VideoExtractor
 
         private void button14_Click(object sender, EventArgs e)
         {
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
-            {
-                textBox10.Text = textBox11.Text = openFileDialog1.FileName;
+            openFileDialog.Filter = FilterVideo;
 
-                FileInfo fi = new FileInfo(openFileDialog1.FileName);
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                textBox10.Text = textBox11.Text = openFileDialog.FileName;
+
+                FileInfo fi = new FileInfo(openFileDialog.FileName);
                 textBox11.Text = fi.FullName.Replace(fi.Extension, "") + "_resized" + fi.Extension;
             }
         }
 
         private void button13_Click(object sender, EventArgs e)
         {
-            saveFileDialog1.Filter = "AVI|*.avi|FLV|*.flv|MOV|*.mov|MKV|*.mkv|MP4|*.mp4|OGG|*.ogg|WEBM|*.webm|WMV|*.wmv|All files|*.*";
+            saveFileDialog.Filter = FilterVideo;
 
-            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                textBox11.Text = saveFileDialog1.FileName;
+                textBox11.Text = saveFileDialog.FileName;
             }
         }
 
         private void button17_Click(object sender, EventArgs e)
         {
             JobInfo jobInfo = Utility.ResizeVideo(textBox10.Text, textBox11.Text,
-                (int)numericUpDown6.Value, (int)numericUpDown7.Value, comboBox11.Text, comboBox12.Text);
+                (int)numericUpDown6.Value, (int)numericUpDown7.Value, comboBox11.Text, comboBox12.Text, OverwriteFiles);
 
-            logger.Log("ffmpeg.exe " + jobInfo.Arguments);
-
-            tabControl1.SelectTab(queueTab);
-
-            BackgroundWorker bw = new BackgroundWorker();
-            bw.DoWork += (obj, ea) => bw_DoWork(obj, ea, jobInfo);
-            bw.RunWorkerCompleted += bw_RunWorkerCompleted;
-            bw.RunWorkerAsync();
+            RunAsync(jobInfo);
         }
 
         private void numericUpDown6_ValueChanged(object sender, EventArgs e)
@@ -805,7 +796,9 @@ namespace VideoExtractor
             label34.Text = (numericUpDown7.Value == 0) ? "px (default)" : "px";
         }
 
-        // CROP VIDEO
+        #endregion
+
+        #region CROP VIDEO
 
         private void textBox12_TextChanged(object sender, EventArgs e)
         {
@@ -814,22 +807,24 @@ namespace VideoExtractor
 
         private void button19_Click(object sender, EventArgs e)
         {
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
-            {
-                textBox12.Text = textBox12.Text = openFileDialog1.FileName;
+            openFileDialog.Filter = FilterVideo;
 
-                FileInfo fi = new FileInfo(openFileDialog1.FileName);
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                textBox12.Text = textBox12.Text = openFileDialog.FileName;
+
+                FileInfo fi = new FileInfo(openFileDialog.FileName);
                 textBox13.Text = fi.FullName.Replace(fi.Extension, "") + "_new" + fi.Extension;
             }
         }
 
         private void button18_Click(object sender, EventArgs e)
         {
-            saveFileDialog1.Filter = "AVI|*.avi|FLV|*.flv|MOV|*.mov|MKV|*.mkv|MP4|*.mp4|OGG|*.ogg|WEBM|*.webm|WMV|*.wmv|All files|*.*";
+            saveFileDialog.Filter = FilterVideo;
 
-            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                textBox13.Text = saveFileDialog1.FileName;
+                textBox13.Text = saveFileDialog.FileName;
             }
         }
 
@@ -841,31 +836,28 @@ namespace VideoExtractor
         private void button20_Click(object sender, EventArgs e)
         {
             JobInfo jobInfo = Utility.CropVideo(textBox12.Text, textBox13.Text,
-                (int)numericUpDown1.Value, (int)numericUpDown3.Value, checkBox4.Checked, (int)numericUpDown5.Value, (int)numericUpDown4.Value);
+                (int)numericUpDown1.Value, (int)numericUpDown3.Value, checkBox4.Checked, (int)numericUpDown5.Value, (int)numericUpDown4.Value, OverwriteFiles);
 
-            logger.Log("ffmpeg.exe " + jobInfo.Arguments);
-
-            tabControl1.SelectTab(queueTab);
-
-            BackgroundWorker bw = new BackgroundWorker();
-            bw.DoWork += (obj, ea) => bw_DoWork(obj, ea, jobInfo);
-            bw.RunWorkerCompleted += bw_RunWorkerCompleted;
-            bw.RunWorkerAsync();
+            RunAsync(jobInfo);
         }
 
-        // QUEUE
+        #endregion
+
+        #region QUEUE
 
         private void listView1_SelectedIndexChanged(object sender, EventArgs e)
         {
             queueStopButton.Enabled = listView1.SelectedItems.Count > 0;
         }
 
-        private ListViewItem AddToQueue(JobInfo jobInfo, Process ffmpegProcess)
+        private ListViewItem AddToQueue(JobInfo jobInfo)
         {
-            ListViewItem item = new ListViewItem();
-            item.Group = listView1.Groups[(int)jobInfo.Task];
-            item.Tag = ffmpegProcess;
-            item.Text = jobInfo.Input;
+            ListViewItem item = new ListViewItem
+            {
+                Group = listView1.Groups[(int) jobInfo.Task],
+                Tag = jobInfo.Process,
+                Text = jobInfo.Input
+            };
             item.SubItems.Add(jobInfo.Output);
 
             if (listView1.InvokeRequired)
@@ -880,7 +872,26 @@ namespace VideoExtractor
                 listView1.Items.Add(item);
             }
 
+            processes.Add(jobInfo.Process);
+
             return item;
+        }
+
+        private void RemoveFromQueue(ListViewItem item)
+        {
+            processes.Remove((Process)item.Tag);
+
+            if (listView1.InvokeRequired)
+            {
+                listView1.Invoke((MethodInvoker)delegate
+                {
+                    listView1.Items.Remove(item);
+                });
+            }
+            else
+            {
+                listView1.Items.Remove(item);
+            }
         }
 
         private void queueStopButton_Click(object sender, EventArgs e)
@@ -900,7 +911,9 @@ namespace VideoExtractor
             }
         }
 
-        // SETTINGS
+        #endregion
+
+        #region SETTINGS
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
@@ -931,12 +944,19 @@ namespace VideoExtractor
             }
         }
 
+        private void checkBox7_CheckedChanged(object sender, EventArgs e)
+        {
+            OverwriteFiles = checkBox7.Checked;
+        }
+
         private void textBox9_TextChanged(object sender, EventArgs e)
         {
             ffmpeg = textBox9.Text;
         }
+        
+        #endregion
 
-        // ABOUT
+        #region ABOUT
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
@@ -948,7 +968,9 @@ namespace VideoExtractor
             Process.Start("http://" + linkLabel2.Text);
         }
 
-        // TABCONTROL
+        #endregion
+
+        #region TABCONTROL
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -1052,5 +1074,6 @@ namespace VideoExtractor
                 e.Effect = DragDropEffects.All;
         }
 
+        #endregion
     }
 }
