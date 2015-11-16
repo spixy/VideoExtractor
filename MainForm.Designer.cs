@@ -159,6 +159,7 @@
             this.outputTab = new System.Windows.Forms.TabPage();
             this.outputLog = new System.Windows.Forms.TextBox();
             this.settingsTab = new System.Windows.Forms.TabPage();
+            this.checkBox7 = new System.Windows.Forms.CheckBox();
             this.checkBox6 = new System.Windows.Forms.CheckBox();
             this.checkBox5 = new System.Windows.Forms.CheckBox();
             this.textBox9 = new System.Windows.Forms.TextBox();
@@ -177,7 +178,6 @@
             this.label15 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.checkBox7 = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar4)).BeginInit();
@@ -888,7 +888,7 @@
             this.textBox3.Name = "textBox3";
             this.textBox3.Size = new System.Drawing.Size(434, 24);
             this.textBox3.TabIndex = 16;
-            this.textBox3.TextChanged += new System.EventHandler(this.textBox4_TextChanged);
+            this.textBox3.TextChanged += new System.EventHandler(this.textBox3_TextChanged);
             // 
             // button4
             // 
@@ -1123,6 +1123,7 @@
             this.textBox11.Name = "textBox11";
             this.textBox11.Size = new System.Drawing.Size(434, 24);
             this.textBox11.TabIndex = 25;
+            this.textBox11.TextChanged += new System.EventHandler(this.textBox11_TextChanged);
             // 
             // label34
             // 
@@ -1713,6 +1714,17 @@
             this.settingsTab.Text = "Settings";
             this.settingsTab.UseVisualStyleBackColor = true;
             // 
+            // checkBox7
+            // 
+            this.checkBox7.AutoSize = true;
+            this.checkBox7.Location = new System.Drawing.Point(29, 78);
+            this.checkBox7.Name = "checkBox7";
+            this.checkBox7.Size = new System.Drawing.Size(123, 22);
+            this.checkBox7.TabIndex = 11;
+            this.checkBox7.Text = "Overwrite files";
+            this.checkBox7.UseVisualStyleBackColor = true;
+            this.checkBox7.CheckedChanged += new System.EventHandler(this.checkBox7_CheckedChanged);
+            // 
             // checkBox6
             // 
             this.checkBox6.AutoSize = true;
@@ -1919,17 +1931,6 @@
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBox1.TabIndex = 8;
             this.pictureBox1.TabStop = false;
-            // 
-            // checkBox7
-            // 
-            this.checkBox7.AutoSize = true;
-            this.checkBox7.Location = new System.Drawing.Point(29, 78);
-            this.checkBox7.Name = "checkBox7";
-            this.checkBox7.Size = new System.Drawing.Size(123, 22);
-            this.checkBox7.TabIndex = 11;
-            this.checkBox7.Text = "Overwrite files";
-            this.checkBox7.UseVisualStyleBackColor = true;
-            this.checkBox7.CheckedChanged += new System.EventHandler(this.checkBox7_CheckedChanged);
             // 
             // MainForm
             // 

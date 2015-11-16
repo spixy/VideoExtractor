@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Media;
 
 namespace VideoExtractor
 {
@@ -45,7 +44,7 @@ namespace VideoExtractor
 
             string arguments = "-i \"" + input + "\" -vn" + channel + samplerate + bitrate + startDate + duration + (overwrite ? " -y" : "") + " \"" + output + "\"";
 
-            return new JobInfo(input, output, arguments, Task.ExtractAudio);
+            return new JobInfo(input, output, arguments, JobInfo.ETask.ExtractAudio);
         }
 
         /// <summary>
@@ -59,7 +58,7 @@ namespace VideoExtractor
 
             string arguments = "-i \"" + input + "\" -r " + fps + duration + startDate + size + (overwrite ? " -y" : "") + " -f image2 \"" + output + "\"";
 
-            return new JobInfo(input, output, arguments, Task.ExtractImages);
+            return new JobInfo(input, output, arguments, JobInfo.ETask.ExtractImages);
         }
 
         /// <summary>
@@ -69,7 +68,7 @@ namespace VideoExtractor
         {
             string arguments = "-i \"" + input + "\" -an" + (overwrite ? " -y" : "") + " \"" + output + "\"";
 
-            return new JobInfo(input, output, arguments, Task.RemoveAudio);
+            return new JobInfo(input, output, arguments, JobInfo.ETask.RemoveAudio);
         }
 
         /// <summary>
@@ -79,7 +78,7 @@ namespace VideoExtractor
         {
             string arguments = "-f image2 -i \"" + input + "\" -r " + fps + (overwrite ? " -y" : "") + " \"" + output + "\"";
 
-            return new JobInfo(input, output, arguments, Task.CreateVideo);
+            return new JobInfo(input, output, arguments, JobInfo.ETask.CreateVideo);
         }
 
         /// <summary>
@@ -98,7 +97,7 @@ namespace VideoExtractor
 
             string arguments = "-i \"" + input + "\"" + video_bitrate + audio_bitrate + size + (overwrite ? " -y" : "") + " \"" + output + "\"";
 
-            return new JobInfo(input, output, arguments, Task.ResizeVideo);
+            return new JobInfo(input, output, arguments, JobInfo.ETask.ResizeVideo);
         }
 
         /// <summary>
@@ -109,7 +108,7 @@ namespace VideoExtractor
             string area = (!center) ? ":" + x + ":" + y : "";
             string arguments = "-i \"" + input + "\" -vf crop=" + width + ":" + height + area + (overwrite ? " -y" : "") + " \"" + output + "\"";
 
-            return new JobInfo(input, output, arguments, Task.CropVideo);
+            return new JobInfo(input, output, arguments, JobInfo.ETask.CropVideo);
         }
 
         /// <summary>

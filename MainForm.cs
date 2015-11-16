@@ -180,22 +180,24 @@ namespace VideoExtractor
 
         private void RunAsync(JobInfo jobInfo)
         {
-            tabControl1.SelectTab(queueTab);
+            if (File.Exists(ffmpeg))
+            {
+                tabControl1.SelectTab(queueTab);
 
-            BackgroundWorker bw = new BackgroundWorker();
-            bw.DoWork += (obj, ea) => bw_DoWork(ea, jobInfo);
-            bw.RunWorkerCompleted += bw_RunWorkerCompleted;
-            bw.RunWorkerAsync();
+                BackgroundWorker bw = new BackgroundWorker();
+                bw.DoWork += (obj, ea) => bw_DoWork(ea, jobInfo);
+                bw.RunWorkerCompleted += bw_RunWorkerCompleted;
+                bw.RunWorkerAsync();
+            }
+            else
+            {
+                Log(ffmpeg + " not found");
+                OnError();
+            }  
         }
 
         private void bw_DoWork(DoWorkEventArgs e, JobInfo jobInfo)
         {
-            if (!File.Exists(ffmpeg))
-            {
-                Log(ffmpeg + " not found");
-                return;
-            }
-
             Process p = jobInfo.CreateProcess(ffmpeg);
 
             p.OutputDataReceived += (s, ea) => Log(ea.Data);
@@ -218,17 +220,17 @@ namespace VideoExtractor
             {
                 // Kill()
                 case -1:
-                    jobInfo.Result = Result.Cancel;
+                    jobInfo.Result = JobInfo.EResult.Cancel;
                     break;
 
                 // OK
                 case 0:
-                    jobInfo.Result = Result.Success;
+                    jobInfo.Result = JobInfo.EResult.Success;
                     break;
 
                 // ffmpeg error
                 default:
-                    jobInfo.Result = Result.Error;
+                    jobInfo.Result = JobInfo.EResult.Error;
                     break;
             }
 
@@ -248,15 +250,15 @@ namespace VideoExtractor
 
             switch (jobInfo.Result)
             {
-                case Result.Success:
+                case JobInfo.EResult.Success:
                     OnSuccess(jobInfo);
                     break;
 
-                case Result.Error:
+                case JobInfo.EResult.Error:
                     OnError(jobInfo);
                     break;
 
-                case Result.Cancel:
+                case JobInfo.EResult.Cancel:
                     OnCancel(jobInfo);
                     break;
             }
@@ -281,6 +283,33 @@ namespace VideoExtractor
         private void OnCancel(JobInfo jobInfo)
         {
             Utility.RemovePath(jobInfo.Output);
+        }
+
+        private void SetTimeText(Control textControl, TrackBar trackBar)
+        {
+            string ms = (textControl.Text.Length == 12) ? textControl.Text.Remove(0, 9) : "000";
+
+            textControl.Text = Utility.GetTimeSpanText(trackBar.Value) + "." + ms;
+        }
+
+        private void GetSavePath(string filter, Control textControl)
+        {
+            saveFileDialog.Filter = filter;
+            GetPath(saveFileDialog, textControl);
+        }
+
+        private void GetOpenPath(string filter, Control textControl)
+        {
+            openFileDialog.Filter = filter;
+            GetPath(openFileDialog, textControl);
+        }
+
+        private void GetPath(CommonDialog dialog, Control textControl)
+        {
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                textControl.Text = openFileDialog.FileName;
+            }
         }
 
         #endregion
@@ -329,7 +358,11 @@ namespace VideoExtractor
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
-            button3.Enabled = File.Exists(textBox1.Text);
+            FileInfo fi = new FileInfo(textBox1.Text);
+
+            textBox2.Text = fi.FullName.Replace(fi.Extension, ".mp3");
+            button3.Enabled = fi.Exists;
+
             VideoInfo videoInfo = VideoInfo.LoadVideoInfo(ffmpeg, textBox1.Text);
 
             if (videoInfo.Channels > 0)
@@ -369,7 +402,10 @@ namespace VideoExtractor
             try
             {
                 FileInfo fi = new FileInfo(textBox1.Text);
-                textBox2.Text = fi.FullName.Replace(fi.Extension, "") + "." + comboBox8.Text.ToLower();
+                string str = fi.FullName.Replace(fi.Extension, "") + "." + comboBox8.Text.ToLower();
+
+                if (textBox2.Text != str)
+                    textBox2.Text = str;
             }
             catch
             {
@@ -410,41 +446,23 @@ namespace VideoExtractor
 
         private void trackBar3_ValueChanged(object sender, EventArgs e)
         {
-            string ms = (textBox16.Text.Length == 12) ? textBox16.Text.Remove(0, 9) : "000";
-
-            textBox16.Text = Utility.GetTimeSpanText(trackBar3.Value) + "." + ms;
+            SetTimeText(textBox16, trackBar3);
         }
 
         private void trackBar4_ValueChanged(object sender, EventArgs e)
         {
-            string ms = (textBox17.Text.Length == 12) ? textBox17.Text.Remove(0, 9) : "000";
-
-            textBox17.Text = Utility.GetTimeSpanText(trackBar4.Value) + "." + ms;
-
+            SetTimeText(textBox17, trackBar4);
             label50.Visible = (trackBar4.Value == 0);
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            openFileDialog.Filter = FilterVideo;
-
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                textBox1.Text = openFileDialog.FileName;
-
-                FileInfo fi = new FileInfo(openFileDialog.FileName);
-                textBox2.Text = fi.FullName.Replace(fi.Extension, ".mp3");
-            }
+            GetOpenPath(FilterVideo, textBox1);
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            saveFileDialog.Filter = FilterAudio;
-
-            if (saveFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                textBox2.Text = saveFileDialog.FileName;
-            }
+            GetSavePath(FilterAudio, textBox2);
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -459,9 +477,13 @@ namespace VideoExtractor
 
         #region EXTRACT IMAGES
 
-        private void textBox4_TextChanged(object sender, EventArgs e)
+        private void textBox3_TextChanged(object sender, EventArgs e)
         {
-            button4.Enabled = File.Exists(textBox3.Text);
+            FileInfo fi = new FileInfo(textBox3.Text);
+
+            textBox4.Text = fi.FullName.Replace(fi.Extension, "") + "_Images";
+            button4.Enabled = fi.Exists;
+
             VideoInfo videoInfo = VideoInfo.LoadVideoInfo(ffmpeg, textBox3.Text);
 
             if (videoInfo.Duration > 0)
@@ -484,15 +506,7 @@ namespace VideoExtractor
 
         private void button6_Click(object sender, EventArgs e)
         {
-            openFileDialog.Filter = FilterVideo;
-
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                textBox3.Text = openFileDialog.FileName;
-
-                FileInfo fi = new FileInfo(openFileDialog.FileName);
-                textBox4.Text = fi.FullName.Replace(fi.Extension, "") + "_Images";
-            }
+            GetOpenPath(FilterVideo, textBox3);
         }
 
         private void button5_Click(object sender, EventArgs e)
@@ -523,17 +537,12 @@ namespace VideoExtractor
 
         private void trackBar1_ValueChanged(object sender, EventArgs e)
         {
-            string ms = (textBox5.Text.Length == 12) ? textBox5.Text.Remove(0, 9) : "000";
-
-            textBox5.Text = Utility.GetTimeSpanText(trackBar1.Value) + "." + ms;
+            SetTimeText(textBox5, trackBar1);
         }
 
         private void trackBar2_ValueChanged(object sender, EventArgs e)
         {
-            string ms = (textBox8.Text.Length == 12) ? textBox8.Text.Remove(0, 9) : "000";
-
-            textBox8.Text = Utility.GetTimeSpanText(trackBar2.Value) + "." + ms;
-
+            SetTimeText(textBox8, trackBar2);
             label11.Visible = (trackBar2.Value == 0);
         }
 
@@ -577,30 +586,20 @@ namespace VideoExtractor
 
         private void textBox6_TextChanged(object sender, EventArgs e)
         {
-            button9.Enabled = File.Exists(textBox6.Text);
+            FileInfo fi = new FileInfo(textBox6.Text);
+
+            textBox7.Text = fi.FullName.Replace(fi.Extension, "") + "_noaudio" + fi.Extension;
+            button9.Enabled = fi.Exists;
         }
 
         private void button8_Click(object sender, EventArgs e)
         {
-            openFileDialog.Filter = FilterVideo;
-
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                textBox6.Text = openFileDialog.FileName;
-
-                FileInfo fi = new FileInfo(openFileDialog.FileName);
-                textBox7.Text = fi.FullName.Replace(fi.Extension, "") + "_noaudio" + fi.Extension;
-            }
+            GetOpenPath(FilterVideo, textBox6);
         }
 
         private void button7_Click(object sender, EventArgs e)
         {
-            saveFileDialog.Filter = FilterVideo;
-
-            if (saveFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                textBox7.Text = saveFileDialog.FileName;
-            }
+            GetSavePath(FilterVideo, textBox7);
         }
 
         private void button9_Click(object sender, EventArgs e)
@@ -616,13 +615,18 @@ namespace VideoExtractor
 
         private void textBox14_TextChanged(object sender, EventArgs e)
         {
+            textBox15.Text = textBox14.Text + "\\MyVideo.avi";
+
             LoadImages();
         }
 
         private void textBox15_TextChanged(object sender, EventArgs e)
         {
             FileInfo fi = new FileInfo(textBox15.Text);
-            comboBox4.Text = fi.Extension.Remove(0, 1).ToUpper();
+            string str = fi.Extension.Remove(0, 1).ToUpper();
+
+            if (comboBox4.Text != str)
+                comboBox4.Text = str;
         }
 
         private void comboBox6_TextChanged(object sender, EventArgs e)
@@ -663,29 +667,18 @@ namespace VideoExtractor
 
             if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
-                string selectedPath = folderBrowserDialog.SelectedPath;
-
-                textBox14.Text = selectedPath;
-                textBox15.Text = selectedPath + "\\MyVideo.avi";
-                comboBox4.Text = "AVI";
+                textBox14.Text = folderBrowserDialog.SelectedPath;
             }
         }
 
         private void button23_Click(object sender, EventArgs e)
         {
-            saveFileDialog.Filter = FilterVideoAndGif;
-
-            if (saveFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                textBox15.Text = saveFileDialog.FileName;
-            }
+            GetSavePath(FilterVideoAndGif, textBox15);
         }
 
         private void button25_Click(object sender, EventArgs e)
         {
-            string input = textBox14.Text + "\\" + comboBox6.Text;
-
-            JobInfo jobInfo = Utility.CreateVideo(input, textBox15.Text, comboBox10.Text, OverwriteFiles);
+            JobInfo jobInfo = Utility.CreateVideo(textBox14.Text + "\\" + comboBox6.Text, textBox15.Text, comboBox10.Text, OverwriteFiles);
 
             RunAsync(jobInfo);
         }
@@ -714,11 +707,12 @@ namespace VideoExtractor
 
         private void textBox10_TextChanged(object sender, EventArgs e)
         {
-            button16.Enabled = File.Exists(textBox10.Text);
+            FileInfo fi = new FileInfo(textBox10.Text);
+
+            textBox11.Text = fi.FullName.Replace(fi.Extension, "") + "_resized" + fi.Extension;
+            button16.Enabled = fi.Exists;
 
             VideoInfo videoInfo = VideoInfo.LoadVideoInfo(ffmpeg, textBox10.Text);
-
-            FileInfo fi = new FileInfo(textBox10.Text);
 
             if (fi.Exists)
             {
@@ -742,12 +736,21 @@ namespace VideoExtractor
             }
         }
 
+        private void textBox11_TextChanged(object sender, EventArgs e)
+        {
+            FileInfo fi = new FileInfo(textBox11.Text);
+            comboBox7.Text = fi.Extension.Remove(0, 1).ToUpper();
+        }
+
         private void comboBox7_TextChanged(object sender, EventArgs e)
         {
             try
             {
                 FileInfo fi = new FileInfo(textBox11.Text);
-                textBox11.Text = fi.FullName.Replace(fi.Extension, "") + "." + comboBox7.Text.ToLower();
+                string str = fi.FullName.Replace(fi.Extension, "") + "." + comboBox7.Text.ToLower();
+
+                if (textBox11.Text != str)
+                    textBox11.Text = str;
             }
             catch
             {
@@ -757,25 +760,12 @@ namespace VideoExtractor
 
         private void button14_Click(object sender, EventArgs e)
         {
-            openFileDialog.Filter = FilterVideo;
-
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                textBox10.Text = textBox11.Text = openFileDialog.FileName;
-
-                FileInfo fi = new FileInfo(openFileDialog.FileName);
-                textBox11.Text = fi.FullName.Replace(fi.Extension, "") + "_resized" + fi.Extension;
-            }
+            GetOpenPath(FilterVideo, textBox10);
         }
 
         private void button13_Click(object sender, EventArgs e)
         {
-            saveFileDialog.Filter = FilterVideo;
-
-            if (saveFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                textBox11.Text = saveFileDialog.FileName;
-            }
+            GetSavePath(FilterVideo, textBox11);
         }
 
         private void button17_Click(object sender, EventArgs e)
@@ -802,30 +792,20 @@ namespace VideoExtractor
 
         private void textBox12_TextChanged(object sender, EventArgs e)
         {
-            button20.Enabled = File.Exists(textBox12.Text);
+            FileInfo fi = new FileInfo(openFileDialog.FileName);
+
+            textBox13.Text = fi.FullName.Replace(fi.Extension, "") + "_new" + fi.Extension;
+            button20.Enabled = fi.Exists;
         }
 
         private void button19_Click(object sender, EventArgs e)
         {
-            openFileDialog.Filter = FilterVideo;
-
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                textBox12.Text = textBox12.Text = openFileDialog.FileName;
-
-                FileInfo fi = new FileInfo(openFileDialog.FileName);
-                textBox13.Text = fi.FullName.Replace(fi.Extension, "") + "_new" + fi.Extension;
-            }
+            GetOpenPath(FilterVideo, textBox12);
         }
 
         private void button18_Click(object sender, EventArgs e)
         {
-            saveFileDialog.Filter = FilterVideo;
-
-            if (saveFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                textBox13.Text = saveFileDialog.FileName;
-            }
+            GetSavePath(FilterVideo, textBox13);
         }
 
         private void checkBox4_CheckedChanged(object sender, EventArgs e)
@@ -974,7 +954,7 @@ namespace VideoExtractor
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (tabControl1.SelectedTab == outputTab && OutputEnabled)
+            if (OutputEnabled && tabControl1.SelectedTab == outputTab)
             {
                 MaximumSize = new Size(0, 0);
             }
@@ -1032,38 +1012,28 @@ namespace VideoExtractor
             switch (tabControl1.TabPages.IndexOf((TabPage)sender))
             {
                 case 0:
-                    if (!fi.Exists)
-                        return;
-                    textBox1.Text = files[0];
-                    textBox2.Text = files[0].Replace(fi.Extension, "") + ".mp3";
+                    if (fi.Exists)
+                        textBox1.Text = files[0];
                     break;
                 case 1:
-                    if (!fi.Exists)
-                        return;
-                    textBox6.Text = files[0];
-                    textBox7.Text = fi.FullName.Replace(fi.Extension, "") + "_noaudio" + fi.Extension;
+                    if (fi.Exists)
+                        textBox6.Text = files[0];
                     break;
                 case 2:
-                    if (!fi.Exists)
-                        return;
-                    textBox3.Text = files[0];
-                    textBox4.Text = fi.FullName.Replace(fi.Extension, "") + "_Images";
+                    if (fi.Exists)
+                        textBox3.Text = files[0];
                     break;
                 case 3:
-                    if (!fi.Exists)
-                        return;
-                    textBox10.Text = files[0];
-                    textBox11.Text = fi.FullName.Replace(fi.Extension, "") + "_resized" + fi.Extension;
+                    if (fi.Exists)
+                        textBox10.Text = files[0];
                     break;
                 case 4:
-                    if (!fi.Exists)
-                        return;
-                    textBox12.Text = files[0];
-                    textBox13.Text = fi.FullName.Replace(fi.Extension, "") + "_new" + fi.Extension;
+                    if (fi.Exists)
+                        textBox12.Text = files[0];
                     break;
                 case 5:
-                    textBox14.Text = files[0];
-                    textBox15.Text = files[0] + "\\MyVideo.avi";
+                    if (fi.Exists)
+                        textBox14.Text = files[0];
                     break;
             }
         }
