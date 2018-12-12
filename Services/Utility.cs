@@ -124,13 +124,12 @@ namespace VideoExtractor
                 return true;
             }
             // Directory
-            else if (Directory.Exists(path))
+            if (Directory.Exists(path))
             {
                 Process.Start("explorer.exe", path);
                 return true;
             }
             // Not found
-            else
             {
                 return false;
             }

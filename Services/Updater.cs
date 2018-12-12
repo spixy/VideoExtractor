@@ -7,46 +7,43 @@ namespace VideoExtractor
 {
     public class Updater
     {
+        private readonly string updateFileUrl;
+
         /// <summary>
         /// Latest application version
         /// </summary>
         public string LatestVersion { get; private set; }
 
         /// <summary>
-        /// File with latest application version
-        /// </summary>
-        public string UpdateFile { get; set; }
-
-        /// <summary>
-        /// Asynchronious action occurs when update is available after calling IsUpdateAvailableAsync()
+        /// Asynchronous action occurs when update is available after calling IsUpdateAvailableAsync()
         /// </summary>
         public Action UpdateAvailableAction { get; set; }
 
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="updateFile">File with latest application version</param>
-        public Updater(string updateFile)
+        /// <param name="updateFileUrl">File with latest application version</param>
+        public Updater(string updateFileUrl)
         {
-            UpdateFile = updateFile;
+            this.updateFileUrl = updateFileUrl;
         }
 
         /// <summary>
         /// Asynchroniously check if update is available
         /// </summary>
-        public void IsUpdateAvailableAsync()
+        public void CheckForUpdateAvailableAsync()
         {
             BackgroundWorker bw = new BackgroundWorker();
             bw.DoWork += IsUpdateAvailableBackground;
-            bw.RunWorkerCompleted += bw_RunWorkerCompleted;
+            bw.RunWorkerCompleted += Bw_RunWorkerCompleted;
             bw.RunWorkerAsync();
         }
 
-        private void bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void Bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (((bool)e.Result) && UpdateAvailableAction != null)
+            if ((bool)e.Result)
             {
-                UpdateAvailableAction();
+                UpdateAvailableAction?.Invoke();
             }
         }
 
@@ -64,10 +61,11 @@ namespace VideoExtractor
             {
                 using (WebClient update = new WebClient())
                 {
-                    LatestVersion = update.DownloadString(UpdateFile);
+                    LatestVersion = update.DownloadString(updateFileUrl).Trim();
                 }
 
-                return (LatestVersion != Application.ProductVersion);
+                string currentVersion = Application.ProductVersion;
+                return currentVersion != LatestVersion;
             }
             catch
             {

@@ -18,32 +18,23 @@ namespace VideoExtractor
         private const string FilterVideo = "AVI|*.avi|FLV|*.flv|MOV|*.mov|MKV|*.mkv|MP4|*.mp4|OGG|*.ogg|WEBM|*.webm|WMV|*.wmv|All files|*.*";
         private const string FilterAudio = "MP2|*.mp2|MP3|*.mp3|MP4|*.mp4|M4A|*.m4a|WAV|*.wav|OGG|*.ogg|WMA|*.wma|All files|*.*";
 
-        private bool OpenExplorer = true;
-        private bool CheckUpdates = true;
-        private bool OverwriteFiles = false;
-        private bool OutputEnabled = false;
+        private bool openExplorer = true;
+        private bool checkUpdates = true;
+        private bool overwriteFiles = false;
+        private bool outputEnabled = false;
         private string ffmpeg = "ffmpeg.exe";
 
         private readonly Logger logger = new Logger(Properties.Resources.LogFile, false);
         private readonly List<Process> processes = new List<Process>();
 
         private OpenFileDialog _openFileDialog;
-        private OpenFileDialog openFileDialog
-        {
-            get { return _openFileDialog ?? (_openFileDialog = new OpenFileDialog()); }
-        }
+        private OpenFileDialog OpenFileDialog => _openFileDialog ?? (_openFileDialog = new OpenFileDialog());
 
         private SaveFileDialog _saveFileDialog;
-        private SaveFileDialog saveFileDialog
-        {
-            get { return _saveFileDialog ?? (_saveFileDialog = new SaveFileDialog()); }
-        }
+        private SaveFileDialog SaveFileDialog => _saveFileDialog ?? (_saveFileDialog = new SaveFileDialog());
 
         private FolderBrowserDialog _folderBrowserDialog;
-        private FolderBrowserDialog folderBrowserDialog
-        {
-            get { return _folderBrowserDialog ?? (_folderBrowserDialog = new FolderBrowserDialog()); }
-        }
+        private FolderBrowserDialog FolderBrowserDialog => _folderBrowserDialog ?? (_folderBrowserDialog = new FolderBrowserDialog());
 
         #endregion
 
@@ -65,8 +56,8 @@ namespace VideoExtractor
 
             label15.Text = Application.ProductVersion;
 
-            int Bits = IntPtr.Size * 8;
-            label19.Text = Bits + "-bit";
+            int bits = IntPtr.Size * 8;
+            label19.Text = bits + "-bit";
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -77,11 +68,11 @@ namespace VideoExtractor
 
             LoadSettings();
 
-            if (CheckUpdates)
+            if (checkUpdates)
             {
                 Updater updater = new Updater(Properties.Resources.UpdateFile);
                 updater.UpdateAvailableAction = () => linkLabel3.Visible = true;
-                updater.IsUpdateAvailableAsync();
+                updater.CheckForUpdateAvailableAsync();
             }
         }
 
@@ -101,8 +92,7 @@ namespace VideoExtractor
                     if (line.ToLower().Contains("ffmpeg ")) textBox9.Text = line.ToLower().Replace("ffmpeg ", "").Trim();
                     if (line.ToLower().Contains("last tab "))
                     {
-                        int index;
-                        if (int.TryParse(line.ToLower().Replace("last tab ", "").Trim(), out index) && index >= 0 && index <= 5)
+                        if (int.TryParse(line.ToLower().Replace("last tab ", "").Trim(), out int index) && index >= 0 && index <= 5)
                             tabControl1.SelectedIndex = index;
                     }
                 }
@@ -156,7 +146,7 @@ namespace VideoExtractor
 
         private void OutputTabLog(string text)
         {
-            if (!OutputEnabled)
+            if (!outputEnabled)
                 return;
 
             if (outputLog.InvokeRequired)
@@ -266,7 +256,7 @@ namespace VideoExtractor
 
         private void OnSuccess(JobInfo jobInfo)
         {
-            if (OpenExplorer && !Utility.LaunchExplorer(jobInfo.Output))
+            if (openExplorer && !Utility.LaunchExplorer(jobInfo.Output))
             {
                 SystemSounds.Hand.Play();
             }
@@ -294,21 +284,21 @@ namespace VideoExtractor
 
         private void GetSavePath(string filter, Control textControl)
         {
-            saveFileDialog.Filter = filter;
-            GetPath(saveFileDialog, textControl);
+            SaveFileDialog.Filter = filter;
+            GetPath(SaveFileDialog, textControl);
         }
 
         private void GetOpenPath(string filter, Control textControl)
         {
-            openFileDialog.Filter = filter;
-            GetPath(openFileDialog, textControl);
+            OpenFileDialog.Filter = filter;
+            GetPath(OpenFileDialog, textControl);
         }
 
         private void GetPath(CommonDialog dialog, Control textControl)
         {
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                textControl.Text = openFileDialog.FileName;
+                textControl.Text = OpenFileDialog.FileName;
             }
         }
 
@@ -318,27 +308,25 @@ namespace VideoExtractor
 
         private void comboBox_Validating(object sender, CancelEventArgs e)
         {
-            ComboBox comboBox = sender as ComboBox;
-            int val;
+            ComboBox comboBox = (ComboBox)sender;
 
-            bool valid = comboBox.SelectedIndex == 0 || (int.TryParse(comboBox.Text, out val) && val > 0);
+            bool valid = comboBox.SelectedIndex == 0 || (int.TryParse(comboBox.Text, out int val) && val > 0);
 
             comboBox.BackColor = (valid) ? SystemColors.Window : Color.Red;
         }
 
         private void comboBox_double_Validating(object sender, CancelEventArgs e)
         {
-            ComboBox comboBox = sender as ComboBox;
-            double val;
+            ComboBox comboBox = (ComboBox)sender;
 
-            bool valid = (double.TryParse(comboBox.Text, out val) && val > 0);
+            bool valid = (double.TryParse(comboBox.Text, out double val) && val > 0);
 
             comboBox.BackColor = (valid) ? SystemColors.Window : Color.Red;
         }
 
         private void textBox_Validating(object sender, CancelEventArgs e)
         {
-            TextBox textBox = sender as TextBox;
+            TextBox textBox = (TextBox)sender;
             string text = textBox.Text;
             int val;
 
@@ -391,8 +379,7 @@ namespace VideoExtractor
         {
             if (comboBox8.Text.ToUpper() == "MP3" && comboBox2.Text != "Default")
             {
-                int val;
-                if (int.TryParse(comboBox2.Text, out val) && val > 320)
+                if (int.TryParse(comboBox2.Text, out int val) && val > 320)
                     comboBox2.Text = "320";
             }
         }
@@ -414,8 +401,7 @@ namespace VideoExtractor
 
             if (comboBox8.Text.ToUpper() == "MP3" && comboBox2.Text != "Default")
             {
-                int val;
-                if (int.TryParse(comboBox2.Text, out val) && val > 320)
+                if (int.TryParse(comboBox2.Text, out int val) && val > 320)
                     comboBox2.Text = "320";
             }
         }
@@ -468,7 +454,7 @@ namespace VideoExtractor
         private void button3_Click(object sender, EventArgs e)
         {
             JobInfo jobInfo = Utility.ExtractAudio(textBox1.Text, textBox2.Text,
-                comboBox1.Text, comboBox2.Text, comboBox5.Text, textBox16.Text, textBox17.Text, OverwriteFiles);
+                comboBox1.Text, comboBox2.Text, comboBox5.Text, textBox16.Text, textBox17.Text, overwriteFiles);
 
             RunAsync(jobInfo);
         }
@@ -492,15 +478,15 @@ namespace VideoExtractor
                 trackBar2.Maximum = videoInfo.Duration;
             }
 
-            if (videoInfo.FPS > 0)
+            if (videoInfo.Fps > 0)
             {
-                comboBox3.Text = videoInfo.FPS.ToString(CultureInfo.InvariantCulture);
+                comboBox3.Text = videoInfo.Fps.ToString(CultureInfo.InvariantCulture);
             }
 
-            if (videoInfo.Size.Width * videoInfo.Size.Height > 0)
+            if (videoInfo.Resolution.Width * videoInfo.Resolution.Height > 0)
             {
-                numericUpDown2.Value = videoInfo.Size.Width;
-                numericUpDown8.Value = videoInfo.Size.Height;
+                numericUpDown2.Value = videoInfo.Resolution.Width;
+                numericUpDown8.Value = videoInfo.Resolution.Height;
             }
         }
 
@@ -511,11 +497,11 @@ namespace VideoExtractor
 
         private void button5_Click(object sender, EventArgs e)
         {
-            folderBrowserDialog.SelectedPath = textBox3.Text;
+            FolderBrowserDialog.SelectedPath = textBox3.Text;
 
-            if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+            if (FolderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
-                textBox4.Text = folderBrowserDialog.SelectedPath;
+                textBox4.Text = FolderBrowserDialog.SelectedPath;
             }
         }
 
@@ -524,7 +510,7 @@ namespace VideoExtractor
             string output = textBox4.Text;
 
             JobInfo jobInfo = Utility.ExtractImages(textBox3.Text, output,
-                (int)numericUpDown2.Value, (int)numericUpDown8.Value, comboBox3.Text.Replace(',', '.'), textBox5.Text, textBox8.Text, OverwriteFiles);
+                (int)numericUpDown2.Value, (int)numericUpDown8.Value, comboBox3.Text.Replace(',', '.'), textBox5.Text, textBox8.Text, overwriteFiles);
 
             if (!Directory.Exists(output))
             {
@@ -604,7 +590,7 @@ namespace VideoExtractor
 
         private void button9_Click(object sender, EventArgs e)
         {
-            JobInfo jobInfo = Utility.RemoveAudio(textBox6.Text, textBox7.Text, OverwriteFiles);
+            JobInfo jobInfo = Utility.RemoveAudio(textBox6.Text, textBox7.Text, overwriteFiles);
 
             RunAsync(jobInfo);
         }
@@ -663,11 +649,11 @@ namespace VideoExtractor
 
         private void button22_Click(object sender, EventArgs e)
         {
-            folderBrowserDialog.SelectedPath = textBox14.Text;
+            FolderBrowserDialog.SelectedPath = textBox14.Text;
 
-            if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+            if (FolderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
-                textBox14.Text = folderBrowserDialog.SelectedPath;
+                textBox14.Text = FolderBrowserDialog.SelectedPath;
             }
         }
 
@@ -678,7 +664,7 @@ namespace VideoExtractor
 
         private void button25_Click(object sender, EventArgs e)
         {
-            JobInfo jobInfo = Utility.CreateVideo(textBox14.Text + "\\" + comboBox6.Text, textBox15.Text, comboBox10.Text, OverwriteFiles);
+            JobInfo jobInfo = Utility.CreateVideo(textBox14.Text + "\\" + comboBox6.Text, textBox15.Text, comboBox10.Text, overwriteFiles);
 
             RunAsync(jobInfo);
         }
@@ -719,10 +705,10 @@ namespace VideoExtractor
                 comboBox7.Text = fi.Extension.Remove(0, 1).ToUpper();
             }
 
-            if (videoInfo.Size.Width * videoInfo.Size.Height > 0)
+            if (videoInfo.Resolution.Width * videoInfo.Resolution.Height > 0)
             {
-                numericUpDown6.Value = videoInfo.Size.Width;
-                numericUpDown7.Value = videoInfo.Size.Height;
+                numericUpDown6.Value = videoInfo.Resolution.Width;
+                numericUpDown7.Value = videoInfo.Resolution.Height;
             }
 
             if (videoInfo.VideoBitRate > 0)
@@ -771,7 +757,7 @@ namespace VideoExtractor
         private void button17_Click(object sender, EventArgs e)
         {
             JobInfo jobInfo = Utility.ResizeVideo(textBox10.Text, textBox11.Text,
-                (int)numericUpDown6.Value, (int)numericUpDown7.Value, comboBox11.Text, comboBox12.Text, OverwriteFiles);
+                (int)numericUpDown6.Value, (int)numericUpDown7.Value, comboBox11.Text, comboBox12.Text, overwriteFiles);
 
             RunAsync(jobInfo);
         }
@@ -792,7 +778,7 @@ namespace VideoExtractor
 
         private void textBox12_TextChanged(object sender, EventArgs e)
         {
-            FileInfo fi = new FileInfo(openFileDialog.FileName);
+            FileInfo fi = new FileInfo(OpenFileDialog.FileName);
 
             textBox13.Text = fi.FullName.Replace(fi.Extension, "") + "_new" + fi.Extension;
             button20.Enabled = fi.Exists;
@@ -816,7 +802,7 @@ namespace VideoExtractor
         private void button20_Click(object sender, EventArgs e)
         {
             JobInfo jobInfo = Utility.CropVideo(textBox12.Text, textBox13.Text,
-                (int)numericUpDown1.Value, (int)numericUpDown3.Value, checkBox4.Checked, (int)numericUpDown5.Value, (int)numericUpDown4.Value, OverwriteFiles);
+                (int)numericUpDown1.Value, (int)numericUpDown3.Value, checkBox4.Checked, (int)numericUpDown5.Value, (int)numericUpDown4.Value, overwriteFiles);
 
             RunAsync(jobInfo);
         }
@@ -897,12 +883,12 @@ namespace VideoExtractor
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
-            OpenExplorer = checkBox1.Checked;
+            openExplorer = checkBox1.Checked;
         }
 
         private void checkBox2_CheckedChanged(object sender, EventArgs e)
         {
-            CheckUpdates = checkBox2.Checked;
+            checkUpdates = checkBox2.Checked;
         }
 
         private void checkBox3_CheckedChanged(object sender, EventArgs e)
@@ -912,9 +898,9 @@ namespace VideoExtractor
 
         private void checkBox5_CheckedChanged(object sender, EventArgs e)
         {
-            OutputEnabled = checkBox5.Checked;
+            outputEnabled = checkBox5.Checked;
 
-            if (OutputEnabled)
+            if (outputEnabled)
             {
                 tabControl1.TabPages.Insert(7, outputTab);
             }
@@ -926,7 +912,7 @@ namespace VideoExtractor
 
         private void checkBox7_CheckedChanged(object sender, EventArgs e)
         {
-            OverwriteFiles = checkBox7.Checked;
+            overwriteFiles = checkBox7.Checked;
         }
 
         private void textBox9_TextChanged(object sender, EventArgs e)
@@ -954,7 +940,7 @@ namespace VideoExtractor
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (OutputEnabled && tabControl1.SelectedTab == outputTab)
+            if (outputEnabled && tabControl1.SelectedTab == outputTab)
             {
                 MaximumSize = new Size(0, 0);
             }
