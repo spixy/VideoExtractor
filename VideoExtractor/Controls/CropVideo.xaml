@@ -1,0 +1,75 @@
+﻿<UserControl x:Class="VideoExtractor.Controls.CropVideo"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:VideoExtractor.Controls"
+             xmlns:viewModels="clr-namespace:VideoExtractor.ViewModels"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <StackPanel>
+
+        <GroupBox Margin="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="40" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource TextBlockBefore}" Text="Input file" />
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding InputFile}" />
+                <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource ButtonAfter}" Command="{Binding InputFileCommand}" >
+                    <Image Style="{StaticResource FileButtonImage}"></Image>
+                </Button>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource TextBlockBefore}" Text="Output file" />
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding OutputFile}" />
+                <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource ButtonAfter}" Command="{Binding OutputFileCommand}" >
+                    <Image Style="{StaticResource FileButtonImage}"></Image>
+                </Button>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Margin="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource TextBlockBefore}" Text="Position" />
+
+                <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1">
+                    <xctk:IntegerUpDown Value="{Binding X, Mode=TwoWay}" Width="100" Watermark="Default" Minimum="1" IsEnabled="{Binding PositionEnabled}" />
+                    <TextBlock VerticalAlignment="Center" Margin="8" Text="x" />
+                    <xctk:IntegerUpDown Value="{Binding Y, Mode=TwoWay}" Width="100"  Watermark="Default" Minimum="1" IsEnabled="{Binding PositionEnabled}" />
+                    <CheckBox Margin="12,0,0,0" IsChecked="{Binding IsInCenter}" >In the center</CheckBox>
+                </StackPanel>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource TextBlockBefore}" Text="Size" />
+
+                <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="1">
+                    <xctk:IntegerUpDown Value="{Binding Width, Mode=TwoWay}" Width="100" Watermark="Default" Minimum="1" />
+                    <TextBlock VerticalAlignment="Center" Margin="8" Text="x" />
+                    <xctk:IntegerUpDown Value="{Binding Height, Mode=TwoWay}" Width="100"  Watermark="Default" Minimum="1" />
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+
+        <Button Command="{Binding StartCommand}"  Style="{StaticResource ButtonStart}" >
+            <TextBlock Style="{StaticResource ButtonStartTextBlock}"/>
+        </Button>
+    </StackPanel>
+
+</UserControl>

@@ -67,5 +67,22 @@ namespace VideoExtractorWPF
 
             return Process;
         }
+
+        /// <summary>
+        /// Returns job to extract audio
+        /// </summary>
+        public static JobInfo ExtractAudio(string input, string output, string samplerate, string bitrate, string channel, string startDate, string duration, bool overwrite)
+        {
+            int val;
+
+            samplerate = (int.TryParse(samplerate, out val)) ? " -ar " + samplerate : "";
+            bitrate = (int.TryParse(bitrate, out val)) ? " -ab " + bitrate : "";
+            channel = (int.TryParse(channel, out val)) ? " -ab " + channel : "";
+            startDate = (!startDate.Contains("00:00:00.000")) ? " -ss " + startDate : "";
+            duration = (!duration.Contains("00:00:00.000")) ? " -t " + duration : "";
+
+            string arguments = "-i \"" + input + "\" -vn" + channel + samplerate + bitrate + startDate + duration + (overwrite ? " -y" : "") + " \"" + output + "\"";
+            return new JobInfo(input, output, arguments, ETask.ExtractAudio);
+        }
     }
 }

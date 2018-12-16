@@ -1,0 +1,44 @@
+﻿<UserControl x:Class="VideoExtractor.Controls.RemoveAudio"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:VideoExtractor.Controls"
+             xmlns:viewModels="clr-namespace:VideoExtractor.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <StackPanel>
+
+        <GroupBox Margin="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="40" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource TextBlockBefore}" Text="Input file" />
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding InputFile}" />
+                <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource ButtonAfter}" Command="{Binding InputFileCommand}" >
+                    <Image Style="{StaticResource FileButtonImage}"></Image>
+                </Button>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource TextBlockBefore}" Text="Output file" />
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding OutputFile}" />
+                <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource ButtonAfter}" Command="{Binding OutputFileCommand}" >
+                    <Image Style="{StaticResource FileButtonImage}"></Image>
+                </Button>
+            </Grid>
+        </GroupBox>
+
+        <Button Command="{Binding StartCommand}"  Style="{StaticResource ButtonStart}" >
+            <TextBlock Style="{StaticResource ButtonStartTextBlock}"/>
+        </Button>
+    </StackPanel>
+
+</UserControl>

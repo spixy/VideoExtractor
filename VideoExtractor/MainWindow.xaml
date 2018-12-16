@@ -3,117 +3,35 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:VideoExtractor"
+        xmlns:controls="clr-namespace:VideoExtractor.Controls"
         xmlns:viewModels="clr-namespace:VideoExtractor.ViewModels"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Video Extractor" Height="450" Width="800">
     <Grid>
         <TabControl TabStripPlacement="Left">
-            <TabControl.Resources>
-                <Style BasedOn="{StaticResource TabItem}" TargetType="TabItem" />
-            </TabControl.Resources>
-
             <TabItem Header="Extract audio" >
-                <StackPanel>
-                    <StackPanel.DataContext>
-                        <viewModels:ExtractAudioViewModel />
-                    </StackPanel.DataContext>
-
-                    <GroupBox Margin="10">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="100" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="40" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="*" />
-                            </Grid.RowDefinitions>
-
-                            <Label Grid.Row="0" Grid.Column="0" Style="{StaticResource LabelBefore}" Content="Input file" />
-                            <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource TextBox}" Text="{Binding InputFile}" />
-                            <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource ButtonAfter}" Command="{Binding InputFileCommand}" >
-                                <Image Source="Resources/Open.png" Style="{StaticResource FileButtonImage}"></Image>
-                            </Button>
-
-                            <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource LabelBefore}" Content="Output file" />
-                            <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource TextBox}" Text="{Binding OutputFile}" />
-                            <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource ButtonAfter}" Command="{Binding OutputFileCommand}" >
-                                <Image Source="pack://application:,,,/Resources/Open.png" Style="{StaticResource FileButtonImage}"></Image>
-                            </Button>
-                        </Grid>
-                    </GroupBox>
-
-                    <GroupBox Margin="10">
-                        <StackPanel>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="100" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="120" />
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
-
-                                <Label Grid.Row="0" Grid.Column="0"  Style="{StaticResource LabelBefore}" Content="Starting time" />
-                                <Slider Grid.Row="0" Grid.Column="1" Style="{StaticResource DurationSlider}" Maximum="10800" LargeChange="60" TickFrequency="300" Value="{Binding StartingTimeSec, Mode=TwoWay}" TickPlacement="BottomRight" />
-                                <TextBox Grid.Row="0" Grid.Column="2" Style="{StaticResource TextBoxAfter}" Text="{Binding StartingTime, Mode=TwoWay}" />
-
-                                <Label Grid.Row="1" Grid.Column="0"  Style="{StaticResource LabelBefore}" Content="Duration" />
-                                <Slider Grid.Row="1" Grid.Column="1" Style="{StaticResource DurationSlider}" Maximum="10800" LargeChange="60" TickFrequency="300" Value="{Binding DurationSec, Mode=TwoWay}"  TickPlacement="BottomRight" />
-                                <TextBox  Grid.Row="1" Grid.Column="2" Style="{StaticResource TextBoxAfter}" Text="{Binding DurationTime, Mode=TwoWay}" />
-                            </Grid>
-
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="100" />
-                                    <ColumnDefinition Width="100" />
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
-
-                                <Label Grid.Row="0" Grid.Column="0"  Style="{StaticResource LabelBefore}" Content="Channels" />
-                                <ComboBox Grid.Row="0" Grid.Column="1" Style="{StaticResource ComboBox}" IsEditable="True" SelectedIndex="{Binding ChannelCountIndex}" ItemsSource="{Binding Channels}" />
-
-                                <Label Grid.Row="1" Grid.Column="0"  Style="{StaticResource LabelBefore}" Content="Sample rate" />
-                                <ComboBox Grid.Row="1" Grid.Column="1" Style="{StaticResource ComboBox}" IsEditable="True" SelectedIndex="{Binding SampleRateIndex}" ItemsSource="{Binding SampleRates}"/>
-
-                                <Label Grid.Row="2" Grid.Column="0"  Style="{StaticResource LabelBefore}" Content="Bitrate" />
-                                <ComboBox Grid.Row="2" Grid.Column="1" Style="{StaticResource ComboBox}" IsEditable="True" SelectedIndex="{Binding BitrateIndex}" ItemsSource="{Binding Bitrates}"/>
-                            </Grid>
-                        </StackPanel>
-                    </GroupBox>
-
-                    <Button Command="{Binding StartCommand}"  Width="160" Height="40" HorizontalAlignment="Center" >
-                        <TextBlock Text="Start" FontSize="14" TextAlignment="Center"/>
-                    </Button>
-                </StackPanel>
+                <controls:ExtractAudio></controls:ExtractAudio>
             </TabItem>
 
             <TabItem Header="Remove audio" >
-                <!-- TODO -->
+                <controls:RemoveAudio></controls:RemoveAudio>
             </TabItem>
 
             <TabItem Header="Extract images" >
-                <!-- TODO -->
+                <controls:ExtractImages></controls:ExtractImages>
             </TabItem>
 
             <TabItem Header="Resize video" >
-                <!-- TODO -->
+                <controls:ResizeVideo></controls:ResizeVideo>
             </TabItem>
 
             <TabItem Header="Crop video" >
-                <!-- TODO -->
+                <controls:CropVideo></controls:CropVideo>
             </TabItem>
 
             <TabItem Header="Create video" >
-
+                <controls:CreateVideo></controls:CreateVideo>
             </TabItem>
 
             <TabItem Header="Queue" >

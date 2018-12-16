@@ -1,18 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Input;
 using JetBrains.Annotations;
 using VideoExtractor.Commands;
+using VideoExtractor.Services;
+using VideoExtractorWPF;
 
 namespace VideoExtractor.ViewModels
 {
-    public class ExtractAudioViewModel : ActionTabViewModelBase
+    public class ExtractAudioModel : ViewModelBase
     {
         private const string TimeSpanFormat = @"hh\:mm\:ss\.fff";
         [NotNull]
-        private static readonly List<object> defaultItem = new List<object> {"Default"};
+        private static readonly List<string> defaultItem = new List<string> {"Default"};
 
         private string _inputFile;
         private string _outputFile;
@@ -21,11 +22,17 @@ namespace VideoExtractor.ViewModels
         private string _startingTime;
         private string _durationTime;
 
-        public ExtractAudioViewModel()
+        public ExtractAudioModel(ICommand afterStartCommand)
         {
-            StartCommand = new RelayCommand(StartButtonClick, param => CanExecute);
+            StartCommand = new RelayCommand(StartButtonClick, param => CanExecute).CreateNextCommand(afterStartCommand);
             InputFileCommand = new RelayCommand(InputFileButtonClick);
             OutputFileCommand = new RelayCommand(OutputFileButtonClick);
+
+            ChannelCount = ChannelCounts?[0];
+            SampleRate = SampleRates?[0];
+            Bitrate = Bitrates?[0];
+            StartingTimeSec = 0;
+            DurationSec = 0;
         }
 
         public ICommand InputFileCommand { get; protected set; }
@@ -57,7 +64,7 @@ namespace VideoExtractor.ViewModels
             set
             {
                 _startingTimeSec = value;
-                _startingTime = GetTimeSpanText(_startingTime, value);
+                _startingTime = Utility.GetTimeSpanText(_startingTime, value, TimeSpanFormat);
                 OnPropertyChanged(nameof(StartingTime));
             }
         }
@@ -68,7 +75,7 @@ namespace VideoExtractor.ViewModels
             set
             {
                 _startingTime = value;
-                if (TryGetTotalSeconds(value, out _startingTimeSec))
+                if (Utility.TryGetTotalSeconds(value, out _startingTimeSec))
                 {
                     OnPropertyChanged(nameof(StartingTimeSec));
                 }
@@ -81,7 +88,7 @@ namespace VideoExtractor.ViewModels
             set
             {
                 _durationSec = value;
-                _durationTime = GetTimeSpanText(_durationTime, value);
+                _durationTime = Utility.GetTimeSpanText(_durationTime, value,  TimeSpanFormat);
                 OnPropertyChanged(nameof(DurationTime));
             }
         }
@@ -92,27 +99,21 @@ namespace VideoExtractor.ViewModels
             set
             {
                 _durationTime = value;
-                if (TryGetTotalSeconds(value, out _durationSec))
+                if (Utility.TryGetTotalSeconds(value, out _durationSec))
                 {
                     OnPropertyChanged(nameof(DurationSec));
                 }
             }
         }
 
-        public int ChannelCountIndex { get; set; }
-        public int SampleRateIndex { get; set; }
-        public int BitrateIndex { get; set; }
+        public string ChannelCount { get; set; }
+        public string SampleRate { get; set; }
+        public string Bitrate { get; set; }
+        public List<string> ChannelCounts { get; } = defaultItem.Union(Enumerable.Range(1, 12).Select(x => x.ToString())).ToList();
+        public List<string> SampleRates { get; } = defaultItem.Union(new List<int> {11_025, 16_000, 22_050, 44_100, 48_000, 88_200, 96_000, 192_000}.Select(x => x.ToString())).ToList();
+        public List<string> Bitrates { get; } = defaultItem.Union(new List<int> {64, 96, 112, 128, 160, 192, 224, 256, 320}.Select(x => x.ToString())).ToList();
 
         public bool CanExecute => File.Exists(InputFile) && DurationSec > 0 && !string.IsNullOrEmpty(OutputFile);
-
-        public IEnumerable<object> Channels { get; }
-            = defaultItem.Union(Enumerable.Range(1, 12).Cast<object>());
-
-        public IEnumerable<object> SampleRates { get; }
-            = defaultItem.Union(new List<object> {11_025, 16_000, 22_050, 44_100, 48_000, 88_200, 96_000, 192_000});
-
-        public IEnumerable<object> Bitrates { get; }
-            = defaultItem.Union(new List<object> {64, 96, 112, 128, 160, 192, 224, 256, 320});
 
         public void InputFileButtonClick(object sender)
         {
@@ -132,41 +133,7 @@ namespace VideoExtractor.ViewModels
 
         public void StartButtonClick(object sender)
         {
-            // TODO
-        }
-
-        /// <summary>
-        /// Transforms seconds to string
-        /// </summary>
-        /// <param name="oldString">old value string (from TimeSpan.ToString)</param>
-        /// <param name="newSeconds">new value in seconds</param>
-        /// <returns>"hh:mm:ss" string</returns>
-        private static string GetTimeSpanText(string oldString, int newSeconds)
-        {
-            int ms = TimeSpan.TryParseExact(oldString, TimeSpanFormat, null, out TimeSpan ts) ? ts.Milliseconds : 0;
-            return new TimeSpan(0, 0, 0, newSeconds, ms).ToString(TimeSpanFormat);
-        }
-
-        /// <summary>
-        /// Transforms string to seconds
-        /// </summary>
-        /// <param name="text">"hh:mm:ss" string</param>
-        /// <param name="result">number of seconds</param>
-        /// <returns>if success</returns>
-        private static bool TryGetTotalSeconds(string text, out int result)
-        {
-            try
-            {
-                result = (int) new TimeSpan(int.Parse(text.Substring(0, 2)),
-                                            int.Parse(text.Substring(3, 2)),
-                                            int.Parse(text.Substring(6, 2))).TotalSeconds;
-                return true;
-            }
-            catch
-            {
-                result = default;
-                return false;
-            }
+            JobInfo jobInfo = JobInfo.ExtractAudio(InputFile, OutputFile, SampleRate, Bitrate, ChannelCount, StartingTime, DurationTime, false);
         }
     }
 }

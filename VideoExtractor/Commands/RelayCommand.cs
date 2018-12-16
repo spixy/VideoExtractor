@@ -37,5 +37,9 @@ namespace VideoExtractor.Commands
         {
             _execute(parameter);
         }
+
+        public CompositeCommand CreateBeforeCommand(ICommand beforeCommand) => new CompositeCommand(beforeCommand, this);
+
+        public CompositeCommand CreateNextCommand(ICommand nextCommand) => new CompositeCommand(this, nextCommand);
     }
 }
