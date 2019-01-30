@@ -2,7 +2,7 @@
 using System.Windows;
 using System.Windows.Input;
 using VideoExtractor.Commands;
-using VideoExtractorWPF;
+using VideoExtractor.Services;
 
 namespace VideoExtractor
 {

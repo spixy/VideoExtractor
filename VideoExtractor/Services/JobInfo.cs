@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace VideoExtractorWPF
+namespace VideoExtractor.Services
 {
     public class JobInfo
     {

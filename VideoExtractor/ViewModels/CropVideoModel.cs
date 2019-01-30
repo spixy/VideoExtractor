@@ -17,7 +17,7 @@ namespace VideoExtractor.ViewModels
 
         public CropVideoModel(ICommand afterStartCommand)
         {
-            StartCommand = new RelayCommand(StartButtonClick, param => CanExecute).CreateNextCommand(afterStartCommand);
+            StartCommand = new RelayCommand(StartButtonClick, param => CanExecute).AddPostCommand(afterStartCommand);
             InputFileCommand = new RelayCommand(InputFileButtonClick);
             OutputFileCommand = new RelayCommand(OutputFileButtonClick);
         }
@@ -31,7 +31,7 @@ namespace VideoExtractor.ViewModels
             set
             {
                 _inputFile = value;
-                OnPropertyChanged(nameof(InputFile));
+                OnPropertyChanged();
             }
         }
 
@@ -41,7 +41,7 @@ namespace VideoExtractor.ViewModels
             set
             {
                 _outputFile = value;
-                OnPropertyChanged(nameof(OutputFile));
+                OnPropertyChanged();
             }
         }
 
@@ -54,7 +54,7 @@ namespace VideoExtractor.ViewModels
             set
             {
                 _isInCenter = value;
-                OnPropertyChanged(nameof(IsInCenter));
+                OnPropertyChanged();
                 OnPropertyChanged(nameof(PositionEnabled));
             }
         }

@@ -5,7 +5,6 @@ using System.Windows.Input;
 using JetBrains.Annotations;
 using VideoExtractor.Commands;
 using VideoExtractor.Services;
-using VideoExtractorWPF;
 
 namespace VideoExtractor.ViewModels
 {
@@ -24,7 +23,7 @@ namespace VideoExtractor.ViewModels
 
         public ExtractAudioModel(ICommand afterStartCommand)
         {
-            StartCommand = new RelayCommand(StartButtonClick, param => CanExecute).CreateNextCommand(afterStartCommand);
+            StartCommand = new RelayCommand(StartButtonClick, param => CanExecute).AddPostCommand(afterStartCommand);
             InputFileCommand = new RelayCommand(InputFileButtonClick);
             OutputFileCommand = new RelayCommand(OutputFileButtonClick);
 
@@ -44,7 +43,7 @@ namespace VideoExtractor.ViewModels
             set
             {
                 _inputFile = value;
-                OnPropertyChanged(nameof(InputFile));
+                OnPropertyChanged();
             }
         }
 
@@ -54,7 +53,7 @@ namespace VideoExtractor.ViewModels
             set
             {
                 _outputFile = value;
-                OnPropertyChanged(nameof(OutputFile));
+                OnPropertyChanged();
             }
         }
 
@@ -65,7 +64,7 @@ namespace VideoExtractor.ViewModels
             {
                 _startingTimeSec = value;
                 _startingTime = Utility.GetTimeSpanText(_startingTime, value, TimeSpanFormat);
-                OnPropertyChanged(nameof(StartingTime));
+                OnPropertyChanged();
             }
         }
 
@@ -77,7 +76,7 @@ namespace VideoExtractor.ViewModels
                 _startingTime = value;
                 if (Utility.TryGetTotalSeconds(value, out _startingTimeSec))
                 {
-                    OnPropertyChanged(nameof(StartingTimeSec));
+                    OnPropertyChanged();
                 }
             }
         }
@@ -89,7 +88,7 @@ namespace VideoExtractor.ViewModels
             {
                 _durationSec = value;
                 _durationTime = Utility.GetTimeSpanText(_durationTime, value,  TimeSpanFormat);
-                OnPropertyChanged(nameof(DurationTime));
+                OnPropertyChanged();
             }
         }
 
@@ -101,7 +100,7 @@ namespace VideoExtractor.ViewModels
                 _durationTime = value;
                 if (Utility.TryGetTotalSeconds(value, out _durationSec))
                 {
-                    OnPropertyChanged(nameof(DurationSec));
+                    OnPropertyChanged();
                 }
             }
         }
